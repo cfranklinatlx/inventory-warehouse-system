@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Warehouse Inventory System</title>
+    <!-- Libraries -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none; /* Avoid accidental text selection during drag */
+        }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: #1e1f22;
+            margin: 0;
+            padding: 16px;
+            color: #ecedee;
+        }
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #2b2d31;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+        }
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: #1e1f22;
+            padding: 12px 16px 0 16px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #404249;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: #b5bac1;
+            padding: 10px 20px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 12px 12px 0 0;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            background: #2b2d31;
+            color: white;
+        }
+        .tab-pane {
+            display: none;
+            padding: 20px;
+            animation: fade 0.2s ease;
+        }
+        .tab-pane.active {
+            display: block;
+        }
+        @keyframes fade {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        button, .btn {
+            background: #5865f2;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.1s linear;
+            font-size: 14px;
+        }
+        button.secondary {
+            background: #2b2d31;
+            border: 1px solid #404249;
+        }
+        button.danger {
+            background: #da373c;
+        }
+        .card-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .card {
+            background: #1e1f22;
+            border-radius: 20px;
+            padding: 16px;
+            width: 280px;
+        }
+        input, select, textarea {
+            background: #111214;
+            border: 1px solid #404249;
+            padding: 8px 12px;
+            border-radius: 12px;
+            color: white;
+            width: 100%;
+            margin: 8px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #1e1f22;
+            border-radius: 16px;
+            overflow: auto;
+            display: block;
+        }
+        th, td {
+            text-align: left;
+            padding: 10px 8px;
+            border-bottom: 1px solid #404249;
+        }
+        .map-canvas {
+            background: #1a1b1e;
+            border-radius: 20px;
+            border: 2px solid #404249;
+            cursor: crosshair;
+            width: 100%;
+            height: auto;
+            background-image: radial-gradient(circle, #404249 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .status-msg {
+            background: #111214;
+            padding: 10px;
+            border-radius: 30px;
+            font-family: monospace;
+            margin: 12px 0;
+        }
+        .flex-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .qr-print-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            justify-content: flex-start;
+            margin-top: 24px;
+        }
+        .qr-item {
+            text-align: center;
+            background: white;
+            padding: 12px;
+            border-radius: 16px;
+            width: 130px;
+        }
+        .qr-item span {
+            display: block;
+            margin-top: 8px;
+            font-size: 12px;
+            color: black;
+            word-break: break-all;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .print-only, .print-only * {
+                visibility: visible;
+            }
+            .print-only {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+            }
+            .tab-pane, .tabs, button {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="scanner">📷 SCANNER</button>
+        <button class="tab-btn" data-tab="master">📋 MASTER LIST</button>
+        <button class="tab-btn" data-tab="qrprint">🖨️ QR PRINTER</button>
+        <button class="tab-btn" data-tab="map">🗺️ WAREHOUSE MAP</button>
+        <button class="tab-btn" data-tab="settings">⚙️ SETTINGS</button>
+    </div>
+
+    <!-- SCANNER PANE -->
+    <div id="scanner" class="tab-pane active">
+        <h2>📷 Scan & Move Items</h2>
+        <div class="flex-row">
+            <button id="registerModeBtn" class="secondary">📝 Register New Item</button>
+            <button id="putawayModeBtn" class="secondary">📦 Put Away (Item → Shelf)</button>
+            <button id="moveModeBtn" class="secondary">🔄 Move Item → New Shelf</button>
+            <button id="checkoutModeBtn" class="secondary">✋ Use / Checkout → Station</button>
+        </div>
+        <div id="scanStatus" class="status-msg">✅ Ready. Select a mode above.</div>
+        <div id="qr-reader" style="width:100%; max-width:500px; margin-top:12px;"></div>
+        <div id="lastScanInfo" style="margin-top:12px; background:#111214; border-radius:16px; padding:12px;"></div>
+    </div>
+
+    <!-- MASTER LIST -->
+    <div id="master" class="tab-pane">
+        <div class="flex-row" style="justify-content: space-between;">
+            <h2>📋 Inventory Master</h2>
+            <div><button id="addBlankItemBtn">➕ Add Blank QR</button> <button id="exportDataBtn">📎 Export Backup</button> <button id="importDataBtn">📂 Import</button></div>
+        </div>
+        <div style="overflow-x: auto;">
+            <table id="masterTable">
+                <thead>
+                    <tr><th>QR ID</th><th>Type</th><th>Item Name</th><th>Quantity</th><th>Location</th><th>Actions</th></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- QR PRINTER -->
+    <div id="qrprint" class="tab-pane">
+        <h2>🖨️ Generate Blank QR Codes</h2>
+        <div class="flex-row">
+            <input type="number" id="qrCount" placeholder="Count" value="8" style="width:100px;">
+            <button id="generateBlanksBtn">✨ Generate Blank QRs</button>
+            <button id="printQrBtn" class="secondary">🖨️ Print this page</button>
+        </div>
+        <div id="qrPrintContainer" class="qr-print-area"></div>
+        <p style="margin-top:20px;">💡 Tip: Each blank QR code is a unique ID. Stick onto items! Later scan + register in Master or Scanner.</p>
+    </div>
+
+    <!-- MAP (draw shelves) -->
+    <div id="map" class="tab-pane">
+        <div class="flex-row" style="justify-content: space-between;">
+            <h2>🗺️ Warehouse Layout</h2>
+            <div><button id="editModeToggle" class="secondary">✏️ Edit Mode: OFF</button>
+            <button id="resetMapBtn" class="danger">Reset Map</button></div>
+        </div>
+        <canvas id="warehouseCanvas" width="800" height="500" class="map-canvas" style="width:100%; height:auto; max-width:1000px; background:#222;"></canvas>
+        <div id="mapSelectedShelf" style="margin-top:16px;"></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="settings" class="tab-pane">
+        <h2>⚙️ System & Demo</h2>
+        <button id="resetDemoData">🔄 Load Fake Office Supplies</button>
+        <p style="margin-top:12px;">All data saved automatically in your browser (localStorage). QR codes work with camera, map drawing persists.</p>
+        <p>✅ This is a FULLY functional demo with fake inventory: staplers, paper, clips, shelf A1/B2/C1, stations.</p>
+    </div>
+</div>
+
+<script>
+    // ---------- DATA MODEL ----------
+    let inventory = [];     // array of items: { id, type, name, qty, location }
+    let shelves = [];      // for map drawing: { id, x, y, w, h, label }
+    let scanMode = "REGISTER"; // REGISTER, PUTAWAY, MOVE, CHECKOUT
+    let scanBuffer = { firstScan: null, secondScan: null, waitingFor: "first" };
+    let editMode = false;
+
+    // Fake initial data (office supplies + blank QRs + shelves)
+    function loadFakeData() {
+        inventory = [
+            { id: "ITEM-001", type: "item", name: "Stapler Heavy Duty", qty: 12, location: "Shelf A1" },
+            { id: "ITEM-002", type: "item", name: "Post-it Notes 3x3", qty: 8, location: "Shelf A1" },
+            { id: "ITEM-003", type: "item", name: "Paper Clips Box", qty: 5, location: "Shelf B2" },
+            { id: "ITEM-004", type: "item", name: "Sharpie Black", qty: 24, location: "Shelf C1" },
+            { id: "ITEM-005", type: "item", name: "Printer Paper Ream", qty: 3, location: "Shelf C2" },
+            { id: "BLANK-001", type: "blank", name: "", qty: 0, location: "unassigned" },
+            { id: "BLANK-002", type: "blank", name: "", qty: 0, location: "unassigned" },
+            { id: "BLANK-003", type: "blank", name: "", qty: 0, location: "unassigned" },
+            { id: "SHELF-A1", type: "shelf", name: "Shelf A1 (Office)", qty: 0, location: "fixed" },
+            { id: "SHELF-B2", type: "shelf", name: "Shelf B2 (Hardware)", qty: 0, location: "fixed" },
+            { id: "SHELF-C1", type: "shelf", name: "Shelf C1 (Writing)", qty: 0, location: "fixed" },
+            { id: "STATION-BENCH", type: "station", name: "Workbench Station", qty: 0, location: "bench" }
+        ];
+        shelves = [
+            { id: "SHELF-A1", x: 80, y: 100, w: 120, h: 80, label: "A1" },
+            { id: "SHELF-B2", x: 300, y: 200, w: 120, h: 80, label: "B2" },
+            { id: "SHELF-C1", x: 550, y: 80, w: 120, h: 80, label: "C1" },
+            { id: "SHELF-C2", x: 550, y: 280, w: 120, h: 80, label: "C2" }
+        ];
+        saveData();
+        renderMasterTable();
+        drawCanvas();
+    }
+
+    function saveData() {
+        localStorage.setItem("inv_warehouse_data", JSON.stringify({ inventory, shelves }));
+    }
+    function loadFromStorage() {
+        const raw = localStorage.getItem("inv_warehouse_data");
+        if(raw) {
+            try {
+                const data = JSON.parse(raw);
+                inventory = data.inventory || [];
+                shelves = data.shelves || [];
+                if(inventory.length === 0) loadFakeData();
+            } catch(e) { loadFakeData(); }
+        } else { loadFakeData(); }
+    }
+
+    // UI Updates
+    function renderMasterTable() {
+        const tbody = document.querySelector("#masterTable tbody");
+        if(!tbody) return;
+        tbody.innerHTML = "";
+        inventory.forEach(item => {
+            const row = tbody.insertRow();
+            row.insertCell(0).innerText = item.id;
+            row.insertCell(1).innerText = item.type;
+            row.insertCell(2).innerHTML = `<input type="text" value="${item.name}" data-id="${item.id}" class="edit-name" style="width:120px;">`;
+            row.insertCell(3).innerHTML = `<input type="number" value="${item.qty}" data-id="${item.id}" class="edit-qty" style="width:70px;">`;
+            row.insertCell(4).innerText = item.location;
+            row.insertCell(5).innerHTML = `<button class="small-scan" data-id="${item.id}">🔍 Scan assign</button> <button class="delete-item" data-id="${item.id}">🗑️</button>`;
+        });
+        // attach events
+        document.querySelectorAll('.edit-name').forEach(inp => {
+            inp.addEventListener('change', (e) => {
+                const id = inp.dataset.id;
+                const item = inventory.find(i => i.id === id);
+                if(item) item.name = inp.value;
+                saveData();
+            });
+        });
+        document.querySelectorAll('.edit-qty').forEach(inp => {
+            inp.addEventListener('change', (e) => {
+                const id = inp.dataset.id;
+                const item = inventory.find(i => i.id === id);
+                if(item) item.qty = parseInt(inp.value) || 0;
+                saveData();
+            });
+        });
+        document.querySelectorAll('.small-scan').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const targetId = btn.dataset.id;
+                alert(`Simulated: you can now scan a shelf QR to move ${targetId}. Use scanner tab for live camera.`);
+            });
+        });
+        document.querySelectorAll('.delete-item').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = btn.dataset.id;
+                inventory = inventory.filter(i => i.id !== id);
+                saveData();
+                renderMasterTable();
+                drawCanvas();
+            });
+        });
+    }
+
+    // QR Scanner integration
+    let html5QrCode;
+    function startScanner() {
+        if(html5QrCode && html5QrCode.isScanning) html5QrCode.stop().catch(console.log);
+        const readerElem = document.getElementById("qr-reader");
+        readerElem.innerHTML = "";
+        html5QrCode = new Html5Qrcode("qr-reader");
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+        html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanError);
+    }
+    function onScanSuccess(decodedText) {
+        if(html5QrCode) html5QrCode.pause(true);
+        processScannedId(decodedText.trim());
+        setTimeout(() => { if(html5QrCode) html5QrCode.resume(); }, 1500);
+    }
+    function onScanError(err) { /* silent */ }
+
+    function processScannedId(scannedId) {
+        const statusDiv = document.getElementById("scanStatus");
+        const found = inventory.find(i => i.id === scannedId);
+        if(scanMode === "REGISTER") {
+            if(!found || found.type === "blank") {
+                const itemName = prompt("New item name (e.g., Red Stapler):", "Office Supply");
+                if(itemName) {
+                    let target = found;
+                    if(!found) {
+                        // create new
+                        const newId = "ITEM-" + Date.now();
+                        inventory.push({ id: newId, type: "item", name: itemName, qty: 1, location: "unassigned" });
+                        statusDiv.innerText = `✅ Registered NEW: ${itemName} with ID ${newId}`;
+                    } else {
+                        target.name = itemName;
+                        target.type = "item";
+                        target.qty = 1;
+                        statusDiv.innerText = `✅ Registered Blank ${scannedId} as ${itemName}`;
+                    }
+                    saveData();
+                    renderMasterTable();
+                }
+            } else {
+                statusDiv.innerText = `⚠️ ${scannedId} is already registered. Use 'Put Away' mode.`;
+            }
+        }
+        else if(scanMode === "PUTAWAY") {
+            if(scanBuffer.waitingFor === "first") {
+                const item = inventory.find(i => i.id === scannedId && (i.type === "item" || i.type === "blank"));
+                if(item) { scanBuffer.firstScan = item; scanBuffer.waitingFor = "second"; statusDiv.innerText = `📍 Scanned ITEM: ${item.name || item.id}. Now scan a SHELF QR.`; }
+                else { statusDiv.innerText = `❌ Not a valid item: ${scannedId}`; }
+            } else {
+                const shelf = inventory.find(i => i.id === scannedId && i.type === "shelf");
+                if(shelf && scanBuffer.firstScan) {
+                    scanBuffer.firstScan.location = shelf.id;
+                    scanBuffer.firstScan.type = "item";
+                    if(!scanBuffer.firstScan.name) scanBuffer.firstScan.name = "Registered Item";
+                    statusDiv.innerText = `✅ ${scanBuffer.firstScan.name} placed at ${shelf.id}`;
+                    scanBuffer = { firstScan: null, secondScan: null, waitingFor: "first" };
+                    saveData();
+                    renderMasterTable();
+                    drawCanvas();
+                } else { statusDiv.innerText = `❌ Invalid shelf QR.`; scanBuffer = { firstScan: null, secondScan: null, waitingFor: "first" }; }
+            }
+        }
+        else if(scanMode === "MOVE") {
+            if(scanBuffer.waitingFor === "first") {
+                const item = inventory.find(i => i.id === scannedId && i.type === "item");
+                if(item) { scanBuffer.firstScan = item; scanBuffer.waitingFor = "second"; statusDiv.innerText = `🔄 Item selected: ${item.name}. Scan NEW shelf.`; }
+                else { statusDiv.innerText = `❌ Item not found`; }
+            } else {
+                const newShelf = inventory.find(i => i.id === scannedId && i.type === "shelf");
+                if(newShelf && scanBuffer.firstScan) {
+                    scanBuffer.firstScan.location = newShelf.id;
+                    statusDiv.innerText = `✅ Moved ${scanBuffer.firstScan.name} to ${newShelf.id}`;
+                    scanBuffer = { firstScan: null, secondScan: null, waitingFor: "first" };
+                    saveData();
+                    renderMasterTable();
+                    drawCanvas();
+                } else { statusDiv.innerText = `❌ Destination not a shelf.`; scanBuffer.waitingFor = "first"; }
+            }
+        }
+        else if(scanMode === "CHECKOUT") {
+            if(scanBuffer.waitingFor === "first") {
+                const item = inventory.find(i => i.id === scannedId && i.type === "item");
+                if(item) { scanBuffer.firstScan = item; scanBuffer.waitingFor = "second"; statusDiv.innerText = `✋ Using ${item.name}. Scan STATION or bench QR.`; }
+                else { statusDiv.innerText = `❌ No such item`; }
+            } else {
+                const station = inventory.find(i => i.id === scannedId && i.type === "station");
+                if(station && scanBuffer.firstScan) {
+                    const usedQty = prompt(`How many ${scanBuffer.firstScan.name} to use?`, "1");
+                    const qtyUsed = parseInt(usedQty) || 1;
+                    scanBuffer.firstScan.qty = Math.max(0, (scanBuffer.firstScan.qty || 1) - qtyUsed);
+                    scanBuffer.firstScan.location = station.id;
+                    statusDiv.innerText = `📦 Checked out ${qtyUsed} x ${scanBuffer.firstScan.name} to ${station.id}. New quantity: ${scanBuffer.firstScan.qty}`;
+                    scanBuffer = { firstScan: null, secondScan: null, waitingFor: "first" };
+                    saveData();
+                    renderMasterTable();
+                } else { statusDiv.innerText = `❌ Station not recognized`; scanBuffer.waitingFor = "first"; }
+            }
+        }
+        updateLastScan(scannedId);
+    }
+
+    function updateLastScan(id) { document.getElementById("lastScanInfo").innerHTML = `Last scanned: ${id}`; }
+
+    // Map drawing logic
+    function drawCanvas() {
+        const canvas = document.getElementById("warehouseCanvas");
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#2a2c30";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        shelves.forEach(shelf => {
+            ctx.fillStyle = "#3b82f6";
+            ctx.shadowBlur = 0;
+            ctx.fillRect(shelf.x, shelf.y, shelf.w, shelf.h);
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(shelf.x, shelf.y, shelf.w, shelf.h);
+            ctx.fillStyle = "white";
+            ctx.font = "bold 14px monospace";
+            ctx.fillText(shelf.label, shelf.x+8, shelf.y+24);
+            // find items on this shelf
+            const itemsHere = inventory.filter(i => i.location === shelf.id && i.type === "item");
+            ctx.fillStyle = "#dddddd";
+            ctx.font = "10px sans-serif";
+            ctx.fillText(`${itemsHere.length} item(s)`, shelf.x+8, shelf.y+48);
+        });
+    }
+
+    let isDrawing = false, startX, startY, currentRect = null;
+    function activateCanvasDrawing() {
+        const canvas = document.getElementById("warehouseCanvas");
+        canvas.onmousedown = (e) => {
+            if(!editMode) return;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            startX = (e.clientX - rect.left) * scaleX;
+            startY = (e.clientY - rect.top) * scaleY;
+            isDrawing = true;
+        };
+        canvas.onmousemove = (e) => {
+            if(!isDrawing || !editMode) return;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const currentX = (e.clientX - rect.left) * scaleX;
+            const currentY = (e.clientY - rect.top) * scaleY;
+            drawCanvas();
+            const ctx = canvas.getContext("2d");
+            ctx.fillStyle = "rgba(100,200,100,0.3)";
+            ctx.fillRect(startX, startY, currentX-startX, currentY-startY);
+            currentRect = { x: startX, y: startY, w: currentX-startX, h: currentY-startY };
+        };
+        canvas.onmouseup = () => {
+            if(isDrawing && editMode && currentRect && Math.abs(currentRect.w) > 10 && Math.abs(currentRect.h) > 10) {
+                const newId = `SHELF-${Date.now()}`;
+                const label = prompt("Shelf name:", `Shelf ${shelves.length+1}`);
+                const rectNorm = { x: Math.min(currentRect.x, currentRect.x+currentRect.w), y: Math.min(currentRect.y, currentRect.y+currentRect.h), w: Math.abs(currentRect.w), h: Math.abs(currentRect.h) };
+                shelves.push({ id: newId, x: rectNorm.x, y: rectNorm.y, w: rectNorm.w, h: rectNorm.h, label: label || "New Shelf" });
+                inventory.push({ id: newId, type: "shelf", name: label || "New Shelf", qty: 0, location: "fixed" });
+                saveData();
+                drawCanvas();
+                renderMasterTable();
+            }
+            isDrawing = false;
+            currentRect = null;
+            drawCanvas();
+        };
+    }
+
+    // Event listeners
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            document.getElementById(btn.dataset.tab).classList.add('active');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            if(btn.dataset.tab === 'scanner') startScanner();
+            else if(html5QrCode && html5QrCode.isScanning) html5QrCode.stop().catch(e=>null);
+        });
+    });
+    document.getElementById("registerModeBtn").onclick = () => { scanMode = "REGISTER"; scanBuffer = { firstScan: null, secondScan: null, waitingFor: "first" }; document.getElementById("scanStatus").innerText = "Mode: REGISTER new item (scan blank QR or new item)"; };
+    document.getElementById("putawayModeBtn").onclick = () => { scanMode = "PUTAWAY"; scanBuffer = { firstScan: null, secondScan: null, waitingFor: "first" }; document.getElementById("scanStatus").innerText = "Mode: PUT AWAY. Scan ITEM then SHELF."; };
+    document.getElementById("moveModeBtn").onclick = () => { scanMode = "MOVE"; scanBuffer = { firstScan: null, secondScan: null, waitingFor: "first" }; };
+    document.getElementById("checkoutModeBtn").onclick = () => { scanMode = "CHECKOUT"; scanBuffer = { firstScan: null, secondScan: null, waitingFor: "first" }; };
+    document.getElementById("editModeToggle").onclick = () => { editMode = !editMode; document.getElementById("editModeToggle").innerText = `✏️ Edit Mode: ${editMode ? "ON" : "OFF"}`; };
+    document.getElementById("resetMapBtn").onclick = () => { shelves = []; loadFakeData(); drawCanvas(); renderMasterTable(); };
+    document.getElementById("generateBlanksBtn").onclick = () => {
+        let cnt = parseInt(document.getElementById("qrCount").value) || 3;
+        const container = document.getElementById("qrPrintContainer");
+        container.innerHTML = "";
+        for(let i=0; i<cnt; i++) {
+            const newId = `BLANK-${Date.now()}-${i}`;
+            inventory.push({ id: newId, type: "blank", name: "", qty: 0, location: "unassigned" });
+            const div = document.createElement("div"); div.className = "qr-item";
+            const qrcodeDiv = document.createElement("div"); qrcodeDiv.id = `qr-${newId}`;
+            div.appendChild(qrcodeDiv);
+            div.innerHTML += `<span>${newId}</span>`;
+            container.appendChild(div);
+            new QRCode(qrcodeDiv, { text: newId, width: 100, height: 100 });
+        }
+        saveData(); renderMasterTable();
+    };
+    document.getElementById("printQrBtn").onclick = () => window.print();
+    document.getElementById("addBlankItemBtn").onclick = () => {
+        const bid = `BLANK-${Date.now()}`;
+        inventory.push({ id: bid, type: "blank", name: "", qty: 0, location: "unassigned" });
+        saveData(); renderMasterTable();
+    };
+    document.getElementById("exportDataBtn").onclick = () => {
+        const dataStr = JSON.stringify({ inventory, shelves });
+        const blob = new Blob([dataStr], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a"); a.href = url; a.download = "warehouse_backup.json"; a.click(); URL.revokeObjectURL(url);
+    };
+    document.getElementById("importDataBtn").onclick = () => {
+        const input = document.createElement("input"); input.type = "file"; input.accept = "application/json";
+        input.onchange = e => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = ev => { const data = JSON.parse(ev.target.result); inventory = data.inventory; shelves = data.shelves; saveData(); renderMasterTable(); drawCanvas(); };
+            reader.readAsText(file);
+        };
+        input.click();
+    };
+    document.getElementById("resetDemoData").onclick = () => { loadFakeData(); renderMasterTable(); drawCanvas(); };
+    
+    // Init
+    loadFromStorage();
+    renderMasterTable();
+    drawCanvas();
+    activateCanvasDrawing();
+    startScanner();
+</script>
+</body>
+</html>
