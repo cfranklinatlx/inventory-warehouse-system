@@ -1,586 +1,1905 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Warehouse Inventory System</title>
-    <!-- Libraries -->
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <style>
-        * {
-            box-sizing: border-box;
-            user-select: none; /* Avoid accidental text selection during drag */
-        }
-        body {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-            background: #1e1f22;
-            margin: 0;
-            padding: 16px;
-            color: #ecedee;
-        }
-        .app-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: #2b2d31;
-            border-radius: 24px;
-            overflow: hidden;
-            box-shadow: 0 12px 30px rgba(0,0,0,0.4);
-        }
-        /* Tabs */
-        .tabs {
-            display: flex;
-            gap: 4px;
-            background: #1e1f22;
-            padding: 12px 16px 0 16px;
-            flex-wrap: wrap;
-            border-bottom: 1px solid #404249;
-        }
-        .tab-btn {
-            background: transparent;
-            border: none;
-            color: #b5bac1;
-            padding: 10px 20px;
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            border-radius: 12px 12px 0 0;
-            transition: all 0.2s;
-        }
-        .tab-btn.active {
-            background: #2b2d31;
-            color: white;
-        }
-        .tab-pane {
-            display: none;
-            padding: 20px;
-            animation: fade 0.2s ease;
-        }
-        .tab-pane.active {
-            display: block;
-        }
-        @keyframes fade {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        button, .btn {
-            background: #5865f2;
-            border: none;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: 0.1s linear;
-            font-size: 14px;
-        }
-        button.secondary {
-            background: #2b2d31;
-            border: 1px solid #404249;
-        }
-        button.danger {
-            background: #da373c;
-        }
-        .card-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            margin-top: 16px;
-        }
-        .card {
-            background: #1e1f22;
-            border-radius: 20px;
-            padding: 16px;
-            width: 280px;
-        }
-        input, select, textarea {
-            background: #111214;
-            border: 1px solid #404249;
-            padding: 8px 12px;
-            border-radius: 12px;
-            color: white;
-            width: 100%;
-            margin: 8px 0;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #1e1f22;
-            border-radius: 16px;
-            overflow: auto;
-            display: block;
-        }
-        th, td {
-            text-align: left;
-            padding: 10px 8px;
-            border-bottom: 1px solid #404249;
-        }
-        .map-canvas {
-            background: #1a1b1e;
-            border-radius: 20px;
-            border: 2px solid #404249;
-            cursor: crosshair;
-            width: 100%;
-            height: auto;
-            background-image: radial-gradient(circle, #404249 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
-        .status-msg {
-            background: #111214;
-            padding: 10px;
-            border-radius: 30px;
-            font-family: monospace;
-            margin: 12px 0;
-        }
-        .flex-row {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-        .qr-print-area {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 24px;
-            justify-content: flex-start;
-            margin-top: 24px;
-        }
-        .qr-item {
-            text-align: center;
-            background: white;
-            padding: 12px;
-            border-radius: 16px;
-            width: 130px;
-        }
-        .qr-item span {
-            display: block;
-            margin-top: 8px;
-            font-size: 12px;
-            color: black;
-            word-break: break-all;
-        }
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            .print-only, .print-only * {
-                visibility: visible;
-            }
-            .print-only {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-            }
-            .tab-pane, .tabs, button {
-                display: none;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WarehouseOS — Inventory System</title>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0b0d;
+  --surface: #111318;
+  --surface2: #181b22;
+  --surface3: #1f232d;
+  --border: #252933;
+  --border2: #2e3340;
+  --accent: #4ade80;
+  --accent2: #22d3ee;
+  --accent3: #f59e0b;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --text: #e8eaf0;
+  --text2: #8b90a0;
+  --text3: #555c6e;
+  --mono: 'Space Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+  --radius: 12px;
+  --radius-lg: 20px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.6);
+  --glow-green: 0 0 20px rgba(74,222,128,0.2);
+  --glow-cyan: 0 0 20px rgba(34,211,238,0.2);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{height:100%;background:var(--bg)}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
+
+/* NOISE OVERLAY */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:1000;opacity:0.5}
+
+/* HEADER */
+.header{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;backdrop-filter:blur(20px)}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.logo-text{font-family:var(--mono);font-size:16px;font-weight:700;letter-spacing:-0.5px;color:var(--text)}
+.logo-sub{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:1px}
+.header-stats{display:flex;gap:20px;align-items:center}
+.hstat{text-align:right}
+.hstat-val{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent);line-height:1}
+.hstat-label{font-size:11px;color:var(--text3);margin-top:2px}
+.header-actions{display:flex;gap:8px}
+
+/* NAV */
+.nav{display:flex;gap:2px;padding:0 28px;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav-btn{font-family:var(--sans);font-size:13px;font-weight:500;color:var(--text2);background:none;border:none;padding:12px 18px;cursor:pointer;position:relative;white-space:nowrap;transition:color 0.15s;display:flex;align-items:center;gap:7px;border-bottom:2px solid transparent;margin-bottom:-1px}
+.nav-btn:hover{color:var(--text)}
+.nav-btn.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.nav-btn .nav-icon{font-size:15px}
+.nav-badge{background:var(--accent);color:#000;font-size:10px;font-weight:700;font-family:var(--mono);padding:1px 5px;border-radius:4px;min-width:18px;text-align:center}
+
+/* MAIN */
+.main{flex:1;padding:24px 28px;display:none}
+.main.active{display:block}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;position:relative;overflow:hidden}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px;font-family:var(--mono)}
+.card-value{font-family:var(--mono);font-size:28px;font-weight:700;color:var(--text);line-height:1}
+
+/* GRID LAYOUTS */
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:900px){.grid-4{grid-template-columns:repeat(2,1fr)}.grid-3{grid-template-columns:1fr 1fr}.grid-2{grid-template-columns:1fr}}
+@media(max-width:600px){.grid-4{grid-template-columns:1fr 1fr}.grid-3{grid-template-columns:1fr}}
+
+/* BUTTONS */
+.btn{font-family:var(--sans);font-size:13px;font-weight:600;border:none;padding:9px 18px;border-radius:var(--radius);cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:all 0.15s;text-decoration:none;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#000}
+.btn-primary:hover{background:#22c55e;transform:translateY(-1px);box-shadow:var(--glow-green)}
+.btn-secondary{background:var(--surface3);color:var(--text);border:1px solid var(--border2)}
+.btn-secondary:hover{background:var(--border2)}
+.btn-cyan{background:var(--accent2);color:#000}
+.btn-cyan:hover{background:#06b6d4;box-shadow:var(--glow-cyan)}
+.btn-amber{background:var(--accent3);color:#000}
+.btn-amber:hover{background:#d97706}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-danger:hover{background:#dc2626}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
+.btn-ghost:hover{background:var(--surface3);color:var(--text)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-lg{padding:14px 28px;font-size:15px}
+.btn-icon{padding:8px;width:34px;height:34px;justify-content:center}
+
+/* INPUTS */
+.input{background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:var(--sans);font-size:14px;padding:9px 13px;border-radius:var(--radius);width:100%;transition:border-color 0.15s,box-shadow 0.15s;outline:none}
+.input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(74,222,128,0.1)}
+.input-label{font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px;display:block}
+.input-group{margin-bottom:14px}
+.select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' viewBox='0 0 12 8'%3E%3Cpath stroke='%238b90a0' stroke-width='1.5' d='m1 1 5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+
+/* STATUS TAGS */
+.tag{font-family:var(--mono);font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px;display:inline-flex;align-items:center;gap:4px}
+.tag-green{background:rgba(74,222,128,0.15);color:var(--accent);border:1px solid rgba(74,222,128,0.3)}
+.tag-cyan{background:rgba(34,211,238,0.15);color:var(--accent2);border:1px solid rgba(34,211,238,0.3)}
+.tag-amber{background:rgba(245,158,11,0.15);color:var(--accent3);border:1px solid rgba(245,158,11,0.3)}
+.tag-red{background:rgba(239,68,68,0.15);color:var(--danger);border:1px solid rgba(239,68,68,0.3)}
+.tag-gray{background:rgba(139,144,160,0.15);color:var(--text2);border:1px solid var(--border2)}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;border-radius:var(--radius-lg);border:1px solid var(--border);background:var(--surface)}
+table{width:100%;border-collapse:collapse}
+thead th{font-family:var(--mono);font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;padding:12px 14px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;background:var(--surface)}
+tbody tr{border-bottom:1px solid var(--border);transition:background 0.1s}
+tbody tr:hover{background:var(--surface2)}
+tbody tr:last-child{border-bottom:none}
+tbody td{padding:11px 14px;font-size:13px;vertical-align:middle}
+.td-mono{font-family:var(--mono);font-size:12px;color:var(--text2)}
+.td-editable input{background:var(--surface3);border:1px solid transparent;color:var(--text);font-size:13px;padding:5px 9px;border-radius:8px;width:100%;font-family:var(--sans);transition:border-color 0.15s}
+.td-editable input:focus{outline:none;border-color:var(--accent);background:var(--surface2)}
+
+/* SCANNER UI */
+.scanner-wrap{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-lg);overflow:hidden;position:relative}
+#qr-reader{width:100% !important}
+#qr-reader video{width:100% !important;border-radius:0}
+#qr-reader img{display:none}
+.scanner-overlay{position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center}
+.scan-frame{width:200px;height:200px;position:relative}
+.scan-frame::before,.scan-frame::after{content:'';position:absolute;border-color:var(--accent);border-style:solid;width:40px;height:40px}
+.scan-frame::before{top:0;left:0;border-width:3px 0 0 3px;border-radius:6px 0 0 0}
+.scan-frame::after{bottom:0;right:0;border-width:0 3px 3px 0;border-radius:0 0 6px 0}
+.scan-line{position:absolute;left:5%;right:5%;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:scanline 2s ease-in-out infinite;top:50%;box-shadow:0 0 8px var(--accent)}
+@keyframes scanline{0%,100%{top:10%}50%{top:90%}}
+
+/* MODE BUTTONS */
+.mode-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+.mode-btn{background:var(--surface2);border:2px solid var(--border2);color:var(--text2);padding:14px 16px;border-radius:var(--radius-lg);cursor:pointer;text-align:left;transition:all 0.15s;font-family:var(--sans)}
+.mode-btn:hover{border-color:var(--border);color:var(--text);background:var(--surface3)}
+.mode-btn.active{border-color:var(--accent);background:rgba(74,222,128,0.08);color:var(--text)}
+.mode-btn-icon{font-size:22px;margin-bottom:6px;display:block}
+.mode-btn-title{font-weight:600;font-size:13px;display:block}
+.mode-btn-sub{font-size:11px;color:var(--text3);margin-top:3px;display:block}
+
+/* STATUS LOG */
+.status-log{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:16px;font-family:var(--mono);font-size:13px;min-height:60px;position:relative;overflow:hidden}
+.status-log::before{content:'>';position:absolute;top:16px;left:14px;color:var(--accent);font-size:13px}
+.status-text{padding-left:18px;line-height:1.5;color:var(--text)}
+.log-list{margin-top:12px;display:flex;flex-direction:column;gap:4px;max-height:140px;overflow-y:auto}
+.log-entry{font-size:11px;color:var(--text3);padding:4px 8px;background:var(--surface);border-radius:6px;display:flex;gap:8px}
+.log-time{color:var(--text3);min-width:50px}
+.log-msg{color:var(--text2)}
+
+/* MAP CANVAS */
+#warehouseCanvas{width:100%;height:auto;border-radius:var(--radius-lg);border:1px solid var(--border2);cursor:crosshair;display:block;touch-action:none}
+
+/* QR PRINT AREA */
+.qr-grid{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px}
+.qr-card{background:white;border-radius:12px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;width:140px;box-shadow:0 2px 12px rgba(0,0,0,0.3)}
+.qr-card-label{font-family:monospace;font-size:10px;color:#333;text-align:center;word-break:break-all;max-width:116px}
+.qr-card-type{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#666}
+
+/* SHELF DETAIL MODAL */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-backdrop.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);width:90%;max-width:580px;max-height:90vh;overflow-y:auto;padding:24px;box-shadow:var(--shadow);animation:modal-in 0.2s ease}
+@keyframes modal-in{from{transform:scale(0.95);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-title{font-size:18px;font-weight:700;color:var(--text)}
+
+/* NOTIFICATIONS */
+.notif-wrap{position:fixed;bottom:24px;right:24px;z-index:300;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.notif{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:12px 16px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow);animation:notif-in 0.3s ease;max-width:320px;pointer-events:all;border-left:3px solid var(--accent)}
+.notif.error{border-left-color:var(--danger)}
+.notif.warn{border-left-color:var(--warning)}
+@keyframes notif-in{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes notif-out{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
+
+/* ACTIVITY FEED */
+.activity-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);align-items:flex-start}
+.activity-item:last-child{border-bottom:none}
+.activity-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);margin-top:5px;flex-shrink:0}
+.activity-dot.move{background:var(--accent2)}
+.activity-dot.checkout{background:var(--accent3)}
+.activity-dot.register{background:#a78bfa}
+.activity-body{flex:1}
+.activity-msg{font-size:13px;color:var(--text);line-height:1.4}
+.activity-time{font-family:var(--mono);font-size:11px;color:var(--text3);margin-top:2px}
+
+/* PROGRESS BAR */
+.progress-bar{background:var(--surface3);border-radius:99px;height:6px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width 0.5s ease}
+
+/* SCROLL */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--surface)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text3)}
+
+/* SECTION HEADER */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.section-title{font-size:20px;font-weight:700;color:var(--text)}
+.section-sub{font-size:13px;color:var(--text3);margin-top:3px}
+
+/* SEARCH BAR */
+.search-bar{position:relative;width:260px}
+.search-bar input{padding-left:36px}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;pointer-events:none}
+
+/* TOOLTIP */
+[data-tip]{position:relative}
+[data-tip]::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#111;color:var(--text);font-size:11px;white-space:nowrap;padding:4px 8px;border-radius:6px;pointer-events:none;opacity:0;transition:opacity 0.15s;border:1px solid var(--border2);font-family:var(--sans)}
+[data-tip]:hover::after{opacity:1}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:20px 0}
+
+/* ACCENT CARD */
+.accent-card{background:linear-gradient(135deg,rgba(74,222,128,0.06),rgba(34,211,238,0.06));border:1px solid rgba(74,222,128,0.15);border-radius:var(--radius-lg);padding:20px}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty-state-icon{font-size:48px;margin-bottom:12px;opacity:0.5}
+.empty-state-title{font-size:16px;font-weight:600;color:var(--text2);margin-bottom:6px}
+.empty-state-sub{font-size:13px}
+
+/* FLEXBOX UTILS */
+.flex{display:flex}.flex-col{flex-direction:column}.items-center{align-items:center}.justify-between{justify-content:space-between}.gap-8{gap:8px}.gap-12{gap:12px}.gap-16{gap:16px}.flex-wrap{flex-wrap:wrap}.flex-1{flex:1}.mb-8{margin-bottom:8px}.mb-16{margin-bottom:16px}.mb-24{margin-bottom:24px}.mt-8{margin-top:8px}.mt-16{margin-top:16px}.mt-24{margin-top:24px}
+.text-sm{font-size:13px}.text-xs{font-size:11px}.text-mono{font-family:var(--mono)}.text-muted{color:var(--text2)}.text-dim{color:var(--text3)}.text-accent{color:var(--accent)}.text-cyan{color:var(--accent2)}.text-amber{color:var(--accent3)}.text-danger{color:var(--danger)}.font-bold{font-weight:700}.font-semibold{font-weight:600}
+
+/* PULSE ANIMATION */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+.pulse{animation:pulse 2s ease-in-out infinite}
+
+/* PRINT STYLES */
+@media print{
+  .header,.nav,.notif-wrap,.modal-backdrop{display:none!important}
+  .main{display:block!important;padding:0}
+  body{background:white;color:black}
+  .qr-card{box-shadow:none;border:1px solid #ddd}
+  .btn,.mode-btn,.scanner-wrap,.status-log,.log-list,.map-toolbar{display:none!important}
+  #qrprint.main{display:block!important}
+}
+
+/* CLICKUP SETTINGS */
+.clickup-toggle{display:flex;align-items:center;gap:12px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:16px;margin-bottom:12px}
+.toggle-switch{width:44px;height:24px;background:var(--surface3);border-radius:12px;cursor:pointer;position:relative;transition:background 0.2s;border:1px solid var(--border2);flex-shrink:0}
+.toggle-switch.on{background:var(--accent)}
+.toggle-knob{width:18px;height:18px;background:white;border-radius:50%;position:absolute;top:2px;left:2px;transition:left 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.3)}
+.toggle-switch.on .toggle-knob{left:22px}
+
+/* INLINE EDIT ROW */
+.inline-form{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;background:var(--surface2);border:1px solid var(--accent);border-radius:var(--radius-lg);padding:14px;margin-bottom:14px}
+
+/* RESPONSIVE FIXES */
+@media(max-width:700px){
+  .header{padding:12px 16px}
+  .main{padding:16px}
+  .header-stats{display:none}
+  .mode-grid{grid-template-columns:1fr 1fr}
+  .section-header{flex-direction:column;align-items:flex-start}
+  .search-bar{width:100%}
+}
+</style>
 </head>
 <body>
-<div class="app-container">
-    <div class="tabs">
-        <button class="tab-btn active" data-tab="scanner">📷 SCANNER</button>
-        <button class="tab-btn" data-tab="master">📋 MASTER LIST</button>
-        <button class="tab-btn" data-tab="qrprint">🖨️ QR PRINTER</button>
-        <button class="tab-btn" data-tab="map">🗺️ WAREHOUSE MAP</button>
-        <button class="tab-btn" data-tab="settings">⚙️ SETTINGS</button>
-    </div>
 
-    <!-- SCANNER PANE -->
-    <div id="scanner" class="tab-pane active">
-        <h2>📷 Scan & Move Items</h2>
-        <div class="flex-row">
-            <button id="registerModeBtn" class="secondary">📝 Register New Item</button>
-            <button id="putawayModeBtn" class="secondary">📦 Put Away (Item → Shelf)</button>
-            <button id="moveModeBtn" class="secondary">🔄 Move Item → New Shelf</button>
-            <button id="checkoutModeBtn" class="secondary">✋ Use / Checkout → Station</button>
-        </div>
-        <div id="scanStatus" class="status-msg">✅ Ready. Select a mode above.</div>
-        <div id="qr-reader" style="width:100%; max-width:500px; margin-top:12px;"></div>
-        <div id="lastScanInfo" style="margin-top:12px; background:#111214; border-radius:16px; padding:12px;"></div>
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">📦</div>
+    <div>
+      <div class="logo-text">WarehouseOS</div>
+      <div class="logo-sub">Inventory Management System</div>
     </div>
-
-    <!-- MASTER LIST -->
-    <div id="master" class="tab-pane">
-        <div class="flex-row" style="justify-content: space-between;">
-            <h2>📋 Inventory Master</h2>
-            <div><button id="addBlankItemBtn">➕ Add Blank QR</button> <button id="exportDataBtn">📎 Export Backup</button> <button id="importDataBtn">📂 Import</button></div>
-        </div>
-        <div style="overflow-x: auto;">
-            <table id="masterTable">
-                <thead>
-                    <tr><th>QR ID</th><th>Type</th><th>Item Name</th><th>Quantity</th><th>Location</th><th>Actions</th></tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
+  </div>
+  <div class="header-stats">
+    <div class="hstat">
+      <div class="hstat-val" id="hstat-items">0</div>
+      <div class="hstat-label">Total Items</div>
     </div>
-
-    <!-- QR PRINTER -->
-    <div id="qrprint" class="tab-pane">
-        <h2>🖨️ Generate Blank QR Codes</h2>
-        <div class="flex-row">
-            <input type="number" id="qrCount" placeholder="Count" value="8" style="width:100px;">
-            <button id="generateBlanksBtn">✨ Generate Blank QRs</button>
-            <button id="printQrBtn" class="secondary">🖨️ Print this page</button>
-        </div>
-        <div id="qrPrintContainer" class="qr-print-area"></div>
-        <p style="margin-top:20px;">💡 Tip: Each blank QR code is a unique ID. Stick onto items! Later scan + register in Master or Scanner.</p>
+    <div class="hstat">
+      <div class="hstat-val" id="hstat-shelves">0</div>
+      <div class="hstat-label">Shelves</div>
     </div>
-
-    <!-- MAP (draw shelves) -->
-    <div id="map" class="tab-pane">
-        <div class="flex-row" style="justify-content: space-between;">
-            <h2>🗺️ Warehouse Layout</h2>
-            <div><button id="editModeToggle" class="secondary">✏️ Edit Mode: OFF</button>
-            <button id="resetMapBtn" class="danger">Reset Map</button></div>
-        </div>
-        <canvas id="warehouseCanvas" width="800" height="500" class="map-canvas" style="width:100%; height:auto; max-width:1000px; background:#222;"></canvas>
-        <div id="mapSelectedShelf" style="margin-top:16px;"></div>
+    <div class="hstat">
+      <div class="hstat-val" id="hstat-blanks">0</div>
+      <div class="hstat-label">Blank QRs</div>
     </div>
-
-    <!-- SETTINGS -->
-    <div id="settings" class="tab-pane">
-        <h2>⚙️ System & Demo</h2>
-        <button id="resetDemoData">🔄 Load Fake Office Supplies</button>
-        <p style="margin-top:12px;">All data saved automatically in your browser (localStorage). QR codes work with camera, map drawing persists.</p>
-        <p>✅ This is a FULLY functional demo with fake inventory: staplers, paper, clips, shelf A1/B2/C1, stations.</p>
-    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-secondary btn-sm" onclick="exportData()">⬇ Export</button>
+    <button class="btn btn-primary btn-sm" onclick="showTab('scanner')">📷 Scan</button>
+  </div>
 </div>
 
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn active" onclick="showTab('dashboard')" data-tab="dashboard">
+    <span class="nav-icon">⬡</span> Dashboard
+  </button>
+  <button class="nav-btn" onclick="showTab('scanner')" data-tab="scanner">
+    <span class="nav-icon">📷</span> Scanner
+  </button>
+  <button class="nav-btn" onclick="showTab('master')" data-tab="master">
+    <span class="nav-icon">📋</span> Inventory
+    <span class="nav-badge" id="nav-badge-master">0</span>
+  </button>
+  <button class="nav-btn" onclick="showTab('qrprint')" data-tab="qrprint">
+    <span class="nav-icon">🖨</span> QR Printer
+  </button>
+  <button class="nav-btn" onclick="showTab('map')" data-tab="map">
+    <span class="nav-icon">🗺</span> Map
+  </button>
+  <button class="nav-btn" onclick="showTab('settings')" data-tab="settings">
+    <span class="nav-icon">⚙</span> Settings
+  </button>
+</div>
+
+<!-- ====================== DASHBOARD ====================== -->
+<div id="page-dashboard" class="main active">
+  <div class="section-header mb-24">
+    <div>
+      <div class="section-title">Dashboard</div>
+      <div class="section-sub">System overview and quick actions</div>
+    </div>
+    <div class="flex gap-8">
+      <button class="btn btn-ghost btn-sm" onclick="loadFakeData()">⟳ Load Demo Data</button>
+    </div>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="grid-4 mb-24">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Registered Items</span>
+        <span class="tag tag-green">●&nbsp;LIVE</span>
+      </div>
+      <div class="card-value" id="dash-items">0</div>
+      <div class="text-dim text-sm mt-8">Active inventory entries</div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Total Stock</span>
+      </div>
+      <div class="card-value" id="dash-qty">0</div>
+      <div class="text-dim text-sm mt-8">Units across all locations</div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Shelves</span>
+      </div>
+      <div class="card-value" id="dash-shelves">0</div>
+      <div class="text-dim text-sm mt-8">Mapped storage locations</div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Blank QRs</span>
+        <span class="tag tag-amber">READY</span>
+      </div>
+      <div class="card-value" id="dash-blanks">0</div>
+      <div class="text-dim text-sm mt-8">Unregistered QR codes</div>
+    </div>
+  </div>
+
+  <!-- QUICK ACTIONS + ACTIVITY -->
+  <div class="grid-2">
+    <div>
+      <div class="card mb-16">
+        <div class="card-title mb-16">⚡ QUICK ACTIONS</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <button class="btn btn-primary" onclick="showTab('scanner');setMode('REGISTER')">📝 Register Item</button>
+          <button class="btn btn-cyan" onclick="showTab('scanner');setMode('PUTAWAY')">📦 Put Away</button>
+          <button class="btn btn-secondary" onclick="showTab('scanner');setMode('MOVE')">🔄 Move Item</button>
+          <button class="btn btn-amber" onclick="showTab('scanner');setMode('CHECKOUT')">✋ Check Out</button>
+          <button class="btn btn-ghost" onclick="showTab('qrprint')">🖨 Print QR Codes</button>
+          <button class="btn btn-ghost" onclick="showTab('map')">🗺 View Map</button>
+        </div>
+      </div>
+      <!-- SHELF UTILIZATION -->
+      <div class="card">
+        <div class="card-title mb-16">📊 SHELF UTILIZATION</div>
+        <div id="shelf-util-list"><div class="text-dim text-sm">No shelves configured yet.</div></div>
+      </div>
+    </div>
+    <!-- ACTIVITY FEED -->
+    <div class="card" style="max-height:500px;overflow-y:auto">
+      <div class="card-title mb-16">📜 ACTIVITY LOG</div>
+      <div id="activity-feed">
+        <div class="empty-state">
+          <div class="empty-state-icon">📭</div>
+          <div class="empty-state-title">No activity yet</div>
+          <div class="empty-state-sub">Start scanning to see logs here</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====================== SCANNER ====================== -->
+<div id="page-scanner" class="main">
+  <div class="section-header mb-16">
+    <div>
+      <div class="section-title">📷 Scanner</div>
+      <div class="section-sub">Select a mode then point camera at a QR code</div>
+    </div>
+    <button class="btn btn-ghost btn-sm" id="sim-scan-btn" onclick="showSimPanel()">🎮 Simulate Scan</button>
+  </div>
+
+  <div class="grid-2">
+    <!-- LEFT: CAMERA + STATUS -->
+    <div>
+      <div class="scanner-wrap mb-16" id="scanner-container">
+        <div id="qr-reader"></div>
+        <div class="scanner-overlay" id="scanner-overlay-ui">
+          <div class="scan-frame">
+            <div class="scan-line"></div>
+          </div>
+        </div>
+      </div>
+      <div class="status-log mb-8" id="scan-status">
+        <div class="status-text">Select a mode to begin scanning →</div>
+      </div>
+      <div class="log-list" id="scan-log"></div>
+
+      <!-- SIMULATE PANEL -->
+      <div id="sim-panel" style="display:none;margin-top:12px" class="accent-card">
+        <div class="card-title mb-12">🎮 SIMULATE SCAN (for testing without camera)</div>
+        <div class="input-group">
+          <label class="input-label">Enter QR ID to simulate scanning</label>
+          <div class="flex gap-8">
+            <input class="input" id="sim-input" placeholder="e.g. ITEM-001 or SHELF-A1" list="sim-suggestions">
+            <datalist id="sim-suggestions"></datalist>
+            <button class="btn btn-primary" onclick="simulateScan()">Scan</button>
+          </div>
+        </div>
+        <div class="flex gap-8 flex-wrap mt-8" id="quick-sim-btns"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: MODE SELECT + ITEM INFO -->
+    <div>
+      <div class="card-title mb-12">SELECT MODE</div>
+      <div class="mode-grid">
+        <button class="mode-btn" id="mode-REGISTER" onclick="setMode('REGISTER')">
+          <span class="mode-btn-icon">📝</span>
+          <span class="mode-btn-title">Register New Item</span>
+          <span class="mode-btn-sub">Scan blank QR → name it</span>
+        </button>
+        <button class="mode-btn" id="mode-PUTAWAY" onclick="setMode('PUTAWAY')">
+          <span class="mode-btn-icon">📦</span>
+          <span class="mode-btn-title">Put Away</span>
+          <span class="mode-btn-sub">Item QR → Shelf QR</span>
+        </button>
+        <button class="mode-btn" id="mode-MOVE" onclick="setMode('MOVE')">
+          <span class="mode-btn-icon">🔄</span>
+          <span class="mode-btn-title">Move Item</span>
+          <span class="mode-btn-sub">Item → New Shelf</span>
+        </button>
+        <button class="mode-btn" id="mode-CHECKOUT" onclick="setMode('CHECKOUT')">
+          <span class="mode-btn-icon">✋</span>
+          <span class="mode-btn-title">Check Out</span>
+          <span class="mode-btn-sub">Item → Station (use qty)</span>
+        </button>
+      </div>
+
+      <div id="current-item-info" style="display:none" class="card mt-16">
+        <div class="card-title mb-12">SCANNED ITEM</div>
+        <div id="current-item-details"></div>
+      </div>
+
+      <div class="card mt-16">
+        <div class="card-title mb-12">📋 SCAN INSTRUCTIONS</div>
+        <div id="scan-instructions" class="text-sm text-muted" style="line-height:1.8">
+          Choose a mode on the left to see instructions.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====================== MASTER LIST ====================== -->
+<div id="page-master" class="main">
+  <div class="section-header">
+    <div>
+      <div class="section-title">📋 Inventory Master</div>
+      <div class="section-sub">All items, shelves, stations and blank QR codes</div>
+    </div>
+    <div class="flex gap-8 flex-wrap">
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input class="input" id="master-search" placeholder="Search items..." oninput="renderMasterTable()">
+      </div>
+      <select class="input select" id="master-filter" onchange="renderMasterTable()" style="width:130px">
+        <option value="all">All Types</option>
+        <option value="item">Items Only</option>
+        <option value="shelf">Shelves</option>
+        <option value="station">Stations</option>
+        <option value="blank">Blank QRs</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="openAddItemModal()">+ Add Item</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportData()">⬇ Backup</button>
+      <button class="btn btn-ghost btn-sm" onclick="importData()">⬆ Import</button>
+    </div>
+  </div>
+
+  <!-- INLINE ADD ITEM FORM -->
+  <div id="add-item-form" style="display:none;margin-bottom:16px">
+    <div class="inline-form">
+      <div class="input-group" style="margin:0">
+        <label class="input-label">Item Name</label>
+        <input class="input" id="new-item-name" placeholder="e.g. Red Stapler">
+      </div>
+      <div class="input-group" style="margin:0">
+        <label class="input-label">Quantity</label>
+        <input class="input" type="number" id="new-item-qty" value="1" min="0">
+      </div>
+      <div class="flex gap-8 items-center" style="padding-top:22px">
+        <button class="btn btn-primary btn-sm" onclick="addItemManually()">Add</button>
+        <button class="btn btn-ghost btn-sm" onclick="closeAddItemModal()">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>QR ID</th>
+          <th>Type</th>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Qty</th>
+          <th>Location</th>
+          <th>Last Updated</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="master-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ====================== QR PRINTER ====================== -->
+<div id="page-qrprint" class="main">
+  <div class="section-header">
+    <div>
+      <div class="section-title">🖨 QR Code Printer</div>
+      <div class="section-sub">Generate printable QR codes for items, shelves, and stations</div>
+    </div>
+    <button class="btn btn-primary" onclick="window.print()">🖨 Print Page</button>
+  </div>
+
+  <div class="grid-3 mb-24">
+    <div class="card">
+      <div class="card-title mb-12">BLANK QR CODES</div>
+      <div class="text-sm text-muted mb-16">Generate empty QR codes to stick on new physical items. Register them later via Scanner.</div>
+      <div class="flex gap-8 items-center mb-12">
+        <input class="input" type="number" id="blank-count" value="8" min="1" max="50" style="width:80px">
+        <span class="text-sm text-dim">codes</span>
+      </div>
+      <button class="btn btn-primary" onclick="generateBlanks()">✨ Generate Blanks</button>
+    </div>
+    <div class="card">
+      <div class="card-title mb-12">SHELF QR CODES</div>
+      <div class="text-sm text-muted mb-16">Generate QR codes for physical shelves. Stick on shelf edges for fast scanning.</div>
+      <div class="flex gap-8 items-center mb-12">
+        <input class="input" id="shelf-prefix" value="SHELF-" style="width:100px">
+        <input class="input" type="number" id="shelf-start" value="1" min="1" style="width:60px">
+        <span class="text-sm text-dim">to</span>
+        <input class="input" type="number" id="shelf-end" value="10" min="1" style="width:60px">
+      </div>
+      <button class="btn btn-cyan" onclick="generateShelfQRs()">🗄 Generate Shelves</button>
+    </div>
+    <div class="card">
+      <div class="card-title mb-12">EXISTING ITEMS</div>
+      <div class="text-sm text-muted mb-16">Reprint QR codes for items already in your inventory.</div>
+      <div class="mb-12">
+        <select class="input select" id="reprint-select">
+          <option value="">Select an item...</option>
+        </select>
+      </div>
+      <button class="btn btn-amber" onclick="reprintSelected()">🔁 Add to Print Queue</button>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="flex justify-between items-center mb-16">
+    <div class="section-title" style="font-size:16px">Print Queue <span id="qr-count-badge" class="tag tag-gray ml-8">0 QR codes</span></div>
+    <div class="flex gap-8">
+      <button class="btn btn-ghost btn-sm" onclick="clearPrintQueue()">🗑 Clear Queue</button>
+      <button class="btn btn-primary" onclick="window.print()">🖨 Print All</button>
+    </div>
+  </div>
+
+  <div id="qr-print-area" class="qr-grid">
+    <div class="empty-state" style="width:100%">
+      <div class="empty-state-icon">🖨</div>
+      <div class="empty-state-title">No QR codes queued</div>
+      <div class="empty-state-sub">Use the panels above to generate QR codes</div>
+    </div>
+  </div>
+</div>
+
+<!-- ====================== MAP ====================== -->
+<div id="page-map" class="main">
+  <div class="section-header">
+    <div>
+      <div class="section-title">🗺 Warehouse Map</div>
+      <div class="section-sub" id="map-sub">View mode — click a shelf to see inventory</div>
+    </div>
+    <div class="flex gap-8 flex-wrap">
+      <button class="btn btn-secondary btn-sm" id="edit-mode-btn" onclick="toggleEditMode()">✏ Edit Mode: OFF</button>
+      <button class="btn btn-ghost btn-sm" onclick="resetMap()">↺ Reset Layout</button>
+      <button class="btn btn-ghost btn-sm" onclick="loadFakeData()">⟳ Load Demo</button>
+    </div>
+  </div>
+
+  <div class="accent-card mb-16" id="edit-mode-hint" style="display:none">
+    <div class="flex gap-12 items-center">
+      <span style="font-size:24px">✏</span>
+      <div>
+        <div class="font-semibold text-sm">Edit Mode Active</div>
+        <div class="text-dim text-xs mt-8">Click and drag on the canvas below to draw a shelf. You can also drag existing shelves to reposition them. Click a shelf to rename or delete it.</div>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="warehouseCanvas" width="1000" height="600"></canvas>
+
+  <div id="map-shelf-detail" style="display:none;margin-top:20px" class="card">
+    <div class="card-header">
+      <div class="card-title" id="map-detail-title">SHELF DETAILS</div>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('map-shelf-detail').style.display='none'">✕</button>
+    </div>
+    <div id="map-detail-content"></div>
+  </div>
+</div>
+
+<!-- ====================== SETTINGS ====================== -->
+<div id="page-settings" class="main">
+  <div class="section-header mb-24">
+    <div>
+      <div class="section-title">⚙ Settings</div>
+      <div class="section-sub">Configure system preferences and integrations</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <!-- CLICKUP INTEGRATION -->
+      <div class="card mb-16">
+        <div class="card-title mb-16">🔗 CLICKUP INTEGRATION</div>
+        <div class="clickup-toggle mb-12">
+          <div class="toggle-switch" id="clickup-toggle" onclick="toggleClickup()">
+            <div class="toggle-knob"></div>
+          </div>
+          <div>
+            <div class="font-semibold text-sm">ClickUp Sync</div>
+            <div class="text-dim text-xs mt-8">Push inventory updates to ClickUp tasks</div>
+          </div>
+        </div>
+        <div id="clickup-config" style="display:none">
+          <div class="input-group">
+            <label class="input-label">API Token</label>
+            <input class="input" type="password" id="cu-token" placeholder="pk_xxxxxx..." oninput="saveCUSettings()">
+          </div>
+          <div class="input-group">
+            <label class="input-label">List ID (where tasks live)</label>
+            <input class="input" id="cu-list-id" placeholder="123456789" oninput="saveCUSettings()">
+          </div>
+          <div class="input-group">
+            <label class="input-label">Location Custom Field ID</label>
+            <input class="input" id="cu-field-id" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" oninput="saveCUSettings()">
+          </div>
+          <button class="btn btn-primary btn-sm mt-8" onclick="testClickup()">🔌 Test Connection</button>
+          <div id="cu-status" class="text-sm mt-8"></div>
+        </div>
+        <p class="text-xs text-dim mt-12">ClickUp Business plan required for webhooks. This integration uses the free inbound API to update task custom fields.</p>
+      </div>
+
+      <!-- CATEGORIES -->
+      <div class="card mb-16">
+        <div class="card-title mb-12">🏷 ITEM CATEGORIES</div>
+        <div id="categories-list" class="mb-12"></div>
+        <div class="flex gap-8">
+          <input class="input" id="new-category-input" placeholder="New category name...">
+          <button class="btn btn-primary btn-sm" onclick="addCategory()">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <!-- DATA MANAGEMENT -->
+      <div class="card mb-16">
+        <div class="card-title mb-16">💾 DATA MANAGEMENT</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button class="btn btn-secondary" onclick="exportData()">⬇ Export Backup (JSON)</button>
+          <button class="btn btn-secondary" onclick="importData()">⬆ Import Backup (JSON)</button>
+          <div class="divider"></div>
+          <button class="btn btn-secondary" onclick="loadFakeData()">⟳ Reload Demo Data</button>
+          <button class="btn btn-danger" onclick="clearAllData()">⚠ Clear All Data</button>
+        </div>
+        <p class="text-xs text-dim mt-12">Data is stored in your browser's localStorage. Export regularly to back up your inventory. Share the JSON file with teammates to sync inventories.</p>
+      </div>
+
+      <!-- SCANNER SETTINGS -->
+      <div class="card mb-16">
+        <div class="card-title mb-12">📷 SCANNER PREFERENCES</div>
+        <div class="input-group">
+          <label class="input-label">Camera Facing Mode</label>
+          <select class="input select" id="pref-camera" onchange="savePrefs()">
+            <option value="environment">Rear Camera (recommended)</option>
+            <option value="user">Front Camera</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Scan FPS (frames per second)</label>
+          <select class="input select" id="pref-fps" onchange="savePrefs()">
+            <option value="5">5 fps (battery saving)</option>
+            <option value="10" selected>10 fps (balanced)</option>
+            <option value="20">20 fps (fast)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- APP INFO -->
+      <div class="card">
+        <div class="card-title mb-12">ℹ APP INFO</div>
+        <div class="text-sm text-muted" style="line-height:2">
+          <div>Version: <span class="text-mono text-accent">1.0.0</span></div>
+          <div>Storage: <span class="text-mono text-accent" id="storage-size">0 KB</span></div>
+          <div>Items: <span class="text-mono text-accent" id="info-items">0</span></div>
+          <div>Activity Log: <span class="text-mono text-accent" id="info-logs">0 entries</span></div>
+          <div class="mt-8 text-xs text-dim">Built with html5-qrcode &amp; QRCodeJS. Runs entirely in your browser — no server required.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SHELF DETAIL MODAL -->
+<div class="modal-backdrop" id="shelf-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="shelf-modal-title">Shelf Details</div>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="closeShelfModal()">✕</button>
+    </div>
+    <div id="shelf-modal-body"></div>
+  </div>
+</div>
+
+<!-- ADD ITEM TO SHELF MODAL -->
+<div class="modal-backdrop" id="add-to-shelf-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add Item to <span id="atsh-name"></span></div>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="document.getElementById('add-to-shelf-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Select existing item or create new</label>
+      <select class="input select" id="atsh-item-select">
+        <option value="_new">+ Create new item</option>
+      </select>
+    </div>
+    <div id="atsh-new-fields">
+      <div class="input-group">
+        <label class="input-label">Item Name</label>
+        <input class="input" id="atsh-new-name" placeholder="e.g. Blue Pen">
+      </div>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Quantity</label>
+      <input class="input" type="number" id="atsh-qty" value="1" min="0">
+    </div>
+    <div class="flex gap-8 mt-16">
+      <button class="btn btn-primary" onclick="confirmAddToShelf()">Add Item</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('add-to-shelf-modal').classList.remove('open')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATIONS -->
+<div class="notif-wrap" id="notif-wrap"></div>
+
 <script>
-    // ---------- DATA MODEL ----------
-    let inventory = [];     // array of items: { id, type, name, qty, location }
-    let shelves = [];      // for map drawing: { id, x, y, w, h, label }
-    let scanMode = "REGISTER"; // REGISTER, PUTAWAY, MOVE, CHECKOUT
-    let scanBuffer = { firstScan: null, secondScan: null, waitingFor: "first" };
-    let editMode = false;
+// ============================================================
+//  DATA MODEL
+// ============================================================
+let inventory = [];
+let shelves    = [];
+let activity   = [];
+let categories = ["Office Supplies","Hardware","Electronics","Paper","Writing","Other"];
+let scanMode   = "REGISTER";
+let scanBuffer = { step: 1, item: null };
+let editMode   = false;
+let prefs      = { camera: "environment", fps: 10 };
+let clickupCfg = { enabled: false, token: "", listId: "", fieldId: "" };
+let printQueue = [];
 
-    // Fake initial data (office supplies + blank QRs + shelves)
-    function loadFakeData() {
-        inventory = [
-            { id: "ITEM-001", type: "item", name: "Stapler Heavy Duty", qty: 12, location: "Shelf A1" },
-            { id: "ITEM-002", type: "item", name: "Post-it Notes 3x3", qty: 8, location: "Shelf A1" },
-            { id: "ITEM-003", type: "item", name: "Paper Clips Box", qty: 5, location: "Shelf B2" },
-            { id: "ITEM-004", type: "item", name: "Sharpie Black", qty: 24, location: "Shelf C1" },
-            { id: "ITEM-005", type: "item", name: "Printer Paper Ream", qty: 3, location: "Shelf C2" },
-            { id: "BLANK-001", type: "blank", name: "", qty: 0, location: "unassigned" },
-            { id: "BLANK-002", type: "blank", name: "", qty: 0, location: "unassigned" },
-            { id: "BLANK-003", type: "blank", name: "", qty: 0, location: "unassigned" },
-            { id: "SHELF-A1", type: "shelf", name: "Shelf A1 (Office)", qty: 0, location: "fixed" },
-            { id: "SHELF-B2", type: "shelf", name: "Shelf B2 (Hardware)", qty: 0, location: "fixed" },
-            { id: "SHELF-C1", type: "shelf", name: "Shelf C1 (Writing)", qty: 0, location: "fixed" },
-            { id: "STATION-BENCH", type: "station", name: "Workbench Station", qty: 0, location: "bench" }
-        ];
-        shelves = [
-            { id: "SHELF-A1", x: 80, y: 100, w: 120, h: 80, label: "A1" },
-            { id: "SHELF-B2", x: 300, y: 200, w: 120, h: 80, label: "B2" },
-            { id: "SHELF-C1", x: 550, y: 80, w: 120, h: 80, label: "C1" },
-            { id: "SHELF-C2", x: 550, y: 280, w: 120, h: 80, label: "C2" }
-        ];
-        saveData();
-        renderMasterTable();
-        drawCanvas();
-    }
+// MAP drawing state
+let isDrawing = false, drawStart = null, drawCurrent = null;
+let draggingShelf = null, dragOffset = { x: 0, y: 0 };
+let selectedShelfId = null;
 
-    function saveData() {
-        localStorage.setItem("inv_warehouse_data", JSON.stringify({ inventory, shelves }));
-    }
-    function loadFromStorage() {
-        const raw = localStorage.getItem("inv_warehouse_data");
-        if(raw) {
-            try {
-                const data = JSON.parse(raw);
-                inventory = data.inventory || [];
-                shelves = data.shelves || [];
-                if(inventory.length === 0) loadFakeData();
-            } catch(e) { loadFakeData(); }
-        } else { loadFakeData(); }
-    }
+// QR Scanner instance
+let scanner = null;
+let scannerRunning = false;
 
-    // UI Updates
-    function renderMasterTable() {
-        const tbody = document.querySelector("#masterTable tbody");
-        if(!tbody) return;
-        tbody.innerHTML = "";
-        inventory.forEach(item => {
-            const row = tbody.insertRow();
-            row.insertCell(0).innerText = item.id;
-            row.insertCell(1).innerText = item.type;
-            row.insertCell(2).innerHTML = `<input type="text" value="${item.name}" data-id="${item.id}" class="edit-name" style="width:120px;">`;
-            row.insertCell(3).innerHTML = `<input type="number" value="${item.qty}" data-id="${item.id}" class="edit-qty" style="width:70px;">`;
-            row.insertCell(4).innerText = item.location;
-            row.insertCell(5).innerHTML = `<button class="small-scan" data-id="${item.id}">🔍 Scan assign</button> <button class="delete-item" data-id="${item.id}">🗑️</button>`;
-        });
-        // attach events
-        document.querySelectorAll('.edit-name').forEach(inp => {
-            inp.addEventListener('change', (e) => {
-                const id = inp.dataset.id;
-                const item = inventory.find(i => i.id === id);
-                if(item) item.name = inp.value;
-                saveData();
-            });
-        });
-        document.querySelectorAll('.edit-qty').forEach(inp => {
-            inp.addEventListener('change', (e) => {
-                const id = inp.dataset.id;
-                const item = inventory.find(i => i.id === id);
-                if(item) item.qty = parseInt(inp.value) || 0;
-                saveData();
-            });
-        });
-        document.querySelectorAll('.small-scan').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const targetId = btn.dataset.id;
-                alert(`Simulated: you can now scan a shelf QR to move ${targetId}. Use scanner tab for live camera.`);
-            });
-        });
-        document.querySelectorAll('.delete-item').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const id = btn.dataset.id;
-                inventory = inventory.filter(i => i.id !== id);
-                saveData();
-                renderMasterTable();
-                drawCanvas();
-            });
-        });
-    }
+// ============================================================
+//  FAKE DATA
+// ============================================================
+function loadFakeData() {
+  inventory = [
+    { id:"ITEM-001", type:"item", name:"Heavy Duty Stapler", category:"Office Supplies", qty:12, location:"SHELF-A1", updated: ts() },
+    { id:"ITEM-002", type:"item", name:"Post-it Notes 3×3", category:"Office Supplies", qty:8,  location:"SHELF-A1", updated: ts() },
+    { id:"ITEM-003", type:"item", name:"Paper Clip Box (200ct)", category:"Office Supplies", qty:5, location:"SHELF-B2", updated: ts() },
+    { id:"ITEM-004", type:"item", name:"Sharpie Markers (Black)", category:"Writing", qty:24, location:"SHELF-C1", updated: ts() },
+    { id:"ITEM-005", type:"item", name:"Printer Paper (Ream)", category:"Paper", qty:3, location:"SHELF-C2", updated: ts() },
+    { id:"ITEM-006", type:"item", name:"Scotch Tape Rolls", category:"Office Supplies", qty:18, location:"SHELF-A2", updated: ts() },
+    { id:"ITEM-007", type:"item", name:"Ballpoint Pens (Blue)", category:"Writing", qty:50, location:"SHELF-B1", updated: ts() },
+    { id:"ITEM-008", type:"item", name:"Highlighters (Yellow)", category:"Writing", qty:30, location:"SHELF-C1", updated: ts() },
+    { id:"ITEM-009", type:"item", name:"Manila Folders (25ct)", category:"Paper", qty:7, location:"SHELF-B2", updated: ts() },
+    { id:"ITEM-010", type:"item", name:"Sticky Notes (Assorted)", category:"Office Supplies", qty:15, location:"SHELF-A1", updated: ts() },
+    { id:"BLANK-001", type:"blank", name:"", category:"", qty:0, location:"unassigned", updated: ts() },
+    { id:"BLANK-002", type:"blank", name:"", category:"", qty:0, location:"unassigned", updated: ts() },
+    { id:"BLANK-003", type:"blank", name:"", category:"", qty:0, location:"unassigned", updated: ts() },
+    { id:"SHELF-A1",  type:"shelf",   name:"Shelf A1 — Office", category:"", qty:0, location:"fixed", updated: ts() },
+    { id:"SHELF-A2",  type:"shelf",   name:"Shelf A2 — Tape", category:"", qty:0, location:"fixed", updated: ts() },
+    { id:"SHELF-B1",  type:"shelf",   name:"Shelf B1 — Pens", category:"", qty:0, location:"fixed", updated: ts() },
+    { id:"SHELF-B2",  type:"shelf",   name:"Shelf B2 — Folders", category:"", qty:0, location:"fixed", updated: ts() },
+    { id:"SHELF-C1",  type:"shelf",   name:"Shelf C1 — Markers", category:"", qty:0, location:"fixed", updated: ts() },
+    { id:"SHELF-C2",  type:"shelf",   name:"Shelf C2 — Paper", category:"", qty:0, location:"fixed", updated: ts() },
+    { id:"STATION-DESK",    type:"station", name:"Main Desk Station", category:"", qty:0, location:"station", updated: ts() },
+    { id:"STATION-SHIPPING",type:"station", name:"Shipping Station", category:"", qty:0, location:"station", updated: ts() },
+  ];
+  shelves = [
+    { id:"SHELF-A1", x:60,  y:60,  w:160, h:90,  label:"A1", color:"#3b82f6" },
+    { id:"SHELF-A2", x:60,  y:180, w:160, h:90,  label:"A2", color:"#3b82f6" },
+    { id:"SHELF-B1", x:280, y:60,  w:160, h:90,  label:"B1", color:"#8b5cf6" },
+    { id:"SHELF-B2", x:280, y:180, w:160, h:90,  label:"B2", color:"#8b5cf6" },
+    { id:"SHELF-C1", x:500, y:60,  w:160, h:90,  label:"C1", color:"#06b6d4" },
+    { id:"SHELF-C2", x:500, y:180, w:160, h:90,  label:"C2", color:"#06b6d4" },
+    { id:"STATION-DESK",    x:720, y:60,  w:180, h:80, label:"DESK",     color:"#f59e0b" },
+    { id:"STATION-SHIPPING",x:720, y:180, w:180, h:80, label:"SHIPPING", color:"#f59e0b" },
+  ];
+  activity = [
+    { type:"register", msg:"ITEM-001 registered as 'Heavy Duty Stapler'", time: Date.now()-600000 },
+    { type:"putaway",  msg:"Heavy Duty Stapler placed on Shelf A1", time: Date.now()-540000 },
+    { type:"putaway",  msg:"Post-it Notes placed on Shelf A1", time: Date.now()-480000 },
+    { type:"move",     msg:"Sharpie Markers moved to Shelf C1", time: Date.now()-360000 },
+    { type:"checkout", msg:"Paper Clip Box checked out to Main Desk (qty:2)", time: Date.now()-120000 },
+  ];
+  save();
+  notify("Demo data loaded — office supplies ready!", "success");
+  refreshAll();
+}
 
-    // QR Scanner integration
-    let html5QrCode;
-    function startScanner() {
-        if(html5QrCode && html5QrCode.isScanning) html5QrCode.stop().catch(console.log);
-        const readerElem = document.getElementById("qr-reader");
-        readerElem.innerHTML = "";
-        html5QrCode = new Html5Qrcode("qr-reader");
-        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-        html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanError);
-    }
-    function onScanSuccess(decodedText) {
-        if(html5QrCode) html5QrCode.pause(true);
-        processScannedId(decodedText.trim());
-        setTimeout(() => { if(html5QrCode) html5QrCode.resume(); }, 1500);
-    }
-    function onScanError(err) { /* silent */ }
+// ============================================================
+//  STORAGE
+// ============================================================
+function save() {
+  try {
+    localStorage.setItem("wh_data", JSON.stringify({ inventory, shelves, activity, categories, prefs, clickupCfg }));
+  } catch(e) { console.warn("Storage error", e); }
+}
 
-    function processScannedId(scannedId) {
-        const statusDiv = document.getElementById("scanStatus");
-        const found = inventory.find(i => i.id === scannedId);
-        if(scanMode === "REGISTER") {
-            if(!found || found.type === "blank") {
-                const itemName = prompt("New item name (e.g., Red Stapler):", "Office Supply");
-                if(itemName) {
-                    let target = found;
-                    if(!found) {
-                        // create new
-                        const newId = "ITEM-" + Date.now();
-                        inventory.push({ id: newId, type: "item", name: itemName, qty: 1, location: "unassigned" });
-                        statusDiv.innerText = `✅ Registered NEW: ${itemName} with ID ${newId}`;
-                    } else {
-                        target.name = itemName;
-                        target.type = "item";
-                        target.qty = 1;
-                        statusDiv.innerText = `✅ Registered Blank ${scannedId} as ${itemName}`;
-                    }
-                    saveData();
-                    renderMasterTable();
-                }
-            } else {
-                statusDiv.innerText = `⚠️ ${scannedId} is already registered. Use 'Put Away' mode.`;
-            }
-        }
-        else if(scanMode === "PUTAWAY") {
-            if(scanBuffer.waitingFor === "first") {
-                const item = inventory.find(i => i.id === scannedId && (i.type === "item" || i.type === "blank"));
-                if(item) { scanBuffer.firstScan = item; scanBuffer.waitingFor = "second"; statusDiv.innerText = `📍 Scanned ITEM: ${item.name || item.id}. Now scan a SHELF QR.`; }
-                else { statusDiv.innerText = `❌ Not a valid item: ${scannedId}`; }
-            } else {
-                const shelf = inventory.find(i => i.id === scannedId && i.type === "shelf");
-                if(shelf && scanBuffer.firstScan) {
-                    scanBuffer.firstScan.location = shelf.id;
-                    scanBuffer.firstScan.type = "item";
-                    if(!scanBuffer.firstScan.name) scanBuffer.firstScan.name = "Registered Item";
-                    statusDiv.innerText = `✅ ${scanBuffer.firstScan.name} placed at ${shelf.id}`;
-                    scanBuffer = { firstScan: null, secondScan: null, waitingFor: "first" };
-                    saveData();
-                    renderMasterTable();
-                    drawCanvas();
-                } else { statusDiv.innerText = `❌ Invalid shelf QR.`; scanBuffer = { firstScan: null, secondScan: null, waitingFor: "first" }; }
-            }
-        }
-        else if(scanMode === "MOVE") {
-            if(scanBuffer.waitingFor === "first") {
-                const item = inventory.find(i => i.id === scannedId && i.type === "item");
-                if(item) { scanBuffer.firstScan = item; scanBuffer.waitingFor = "second"; statusDiv.innerText = `🔄 Item selected: ${item.name}. Scan NEW shelf.`; }
-                else { statusDiv.innerText = `❌ Item not found`; }
-            } else {
-                const newShelf = inventory.find(i => i.id === scannedId && i.type === "shelf");
-                if(newShelf && scanBuffer.firstScan) {
-                    scanBuffer.firstScan.location = newShelf.id;
-                    statusDiv.innerText = `✅ Moved ${scanBuffer.firstScan.name} to ${newShelf.id}`;
-                    scanBuffer = { firstScan: null, secondScan: null, waitingFor: "first" };
-                    saveData();
-                    renderMasterTable();
-                    drawCanvas();
-                } else { statusDiv.innerText = `❌ Destination not a shelf.`; scanBuffer.waitingFor = "first"; }
-            }
-        }
-        else if(scanMode === "CHECKOUT") {
-            if(scanBuffer.waitingFor === "first") {
-                const item = inventory.find(i => i.id === scannedId && i.type === "item");
-                if(item) { scanBuffer.firstScan = item; scanBuffer.waitingFor = "second"; statusDiv.innerText = `✋ Using ${item.name}. Scan STATION or bench QR.`; }
-                else { statusDiv.innerText = `❌ No such item`; }
-            } else {
-                const station = inventory.find(i => i.id === scannedId && i.type === "station");
-                if(station && scanBuffer.firstScan) {
-                    const usedQty = prompt(`How many ${scanBuffer.firstScan.name} to use?`, "1");
-                    const qtyUsed = parseInt(usedQty) || 1;
-                    scanBuffer.firstScan.qty = Math.max(0, (scanBuffer.firstScan.qty || 1) - qtyUsed);
-                    scanBuffer.firstScan.location = station.id;
-                    statusDiv.innerText = `📦 Checked out ${qtyUsed} x ${scanBuffer.firstScan.name} to ${station.id}. New quantity: ${scanBuffer.firstScan.qty}`;
-                    scanBuffer = { firstScan: null, secondScan: null, waitingFor: "first" };
-                    saveData();
-                    renderMasterTable();
-                } else { statusDiv.innerText = `❌ Station not recognized`; scanBuffer.waitingFor = "first"; }
-            }
-        }
-        updateLastScan(scannedId);
+function load() {
+  try {
+    const raw = localStorage.getItem("wh_data");
+    if (raw) {
+      const d = JSON.parse(raw);
+      inventory   = d.inventory   || [];
+      shelves     = d.shelves     || [];
+      activity    = d.activity    || [];
+      categories  = d.categories  || categories;
+      prefs       = d.prefs       || prefs;
+      clickupCfg  = d.clickupCfg  || clickupCfg;
+      if (inventory.length === 0) loadFakeData();
+    } else {
+      loadFakeData();
     }
+  } catch(e) { loadFakeData(); }
+}
 
-    function updateLastScan(id) { document.getElementById("lastScanInfo").innerHTML = `Last scanned: ${id}`; }
+function ts() { return Date.now(); }
 
-    // Map drawing logic
-    function drawCanvas() {
-        const canvas = document.getElementById("warehouseCanvas");
-        const ctx = canvas.getContext("2d");
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "#2a2c30";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        shelves.forEach(shelf => {
-            ctx.fillStyle = "#3b82f6";
-            ctx.shadowBlur = 0;
-            ctx.fillRect(shelf.x, shelf.y, shelf.w, shelf.h);
-            ctx.strokeStyle = "white";
-            ctx.lineWidth = 2;
-            ctx.strokeRect(shelf.x, shelf.y, shelf.w, shelf.h);
-            ctx.fillStyle = "white";
-            ctx.font = "bold 14px monospace";
-            ctx.fillText(shelf.label, shelf.x+8, shelf.y+24);
-            // find items on this shelf
-            const itemsHere = inventory.filter(i => i.location === shelf.id && i.type === "item");
-            ctx.fillStyle = "#dddddd";
-            ctx.font = "10px sans-serif";
-            ctx.fillText(`${itemsHere.length} item(s)`, shelf.x+8, shelf.y+48);
-        });
-    }
+function exportData() {
+  const blob = new Blob([JSON.stringify({ inventory, shelves, activity, categories }, null, 2)], { type:"application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `warehouse-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  notify("Backup exported!", "success");
+}
 
-    let isDrawing = false, startX, startY, currentRect = null;
-    function activateCanvasDrawing() {
-        const canvas = document.getElementById("warehouseCanvas");
-        canvas.onmousedown = (e) => {
-            if(!editMode) return;
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            startX = (e.clientX - rect.left) * scaleX;
-            startY = (e.clientY - rect.top) * scaleY;
-            isDrawing = true;
-        };
-        canvas.onmousemove = (e) => {
-            if(!isDrawing || !editMode) return;
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            const currentX = (e.clientX - rect.left) * scaleX;
-            const currentY = (e.clientY - rect.top) * scaleY;
-            drawCanvas();
-            const ctx = canvas.getContext("2d");
-            ctx.fillStyle = "rgba(100,200,100,0.3)";
-            ctx.fillRect(startX, startY, currentX-startX, currentY-startY);
-            currentRect = { x: startX, y: startY, w: currentX-startX, h: currentY-startY };
-        };
-        canvas.onmouseup = () => {
-            if(isDrawing && editMode && currentRect && Math.abs(currentRect.w) > 10 && Math.abs(currentRect.h) > 10) {
-                const newId = `SHELF-${Date.now()}`;
-                const label = prompt("Shelf name:", `Shelf ${shelves.length+1}`);
-                const rectNorm = { x: Math.min(currentRect.x, currentRect.x+currentRect.w), y: Math.min(currentRect.y, currentRect.y+currentRect.h), w: Math.abs(currentRect.w), h: Math.abs(currentRect.h) };
-                shelves.push({ id: newId, x: rectNorm.x, y: rectNorm.y, w: rectNorm.w, h: rectNorm.h, label: label || "New Shelf" });
-                inventory.push({ id: newId, type: "shelf", name: label || "New Shelf", qty: 0, location: "fixed" });
-                saveData();
-                drawCanvas();
-                renderMasterTable();
-            }
-            isDrawing = false;
-            currentRect = null;
-            drawCanvas();
-        };
-    }
-
-    // Event listeners
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-            document.getElementById(btn.dataset.tab).classList.add('active');
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            if(btn.dataset.tab === 'scanner') startScanner();
-            else if(html5QrCode && html5QrCode.isScanning) html5QrCode.stop().catch(e=>null);
-        });
-    });
-    document.getElementById("registerModeBtn").onclick = () => { scanMode = "REGISTER"; scanBuffer = { firstScan: null, secondScan: null, waitingFor: "first" }; document.getElementById("scanStatus").innerText = "Mode: REGISTER new item (scan blank QR or new item)"; };
-    document.getElementById("putawayModeBtn").onclick = () => { scanMode = "PUTAWAY"; scanBuffer = { firstScan: null, secondScan: null, waitingFor: "first" }; document.getElementById("scanStatus").innerText = "Mode: PUT AWAY. Scan ITEM then SHELF."; };
-    document.getElementById("moveModeBtn").onclick = () => { scanMode = "MOVE"; scanBuffer = { firstScan: null, secondScan: null, waitingFor: "first" }; };
-    document.getElementById("checkoutModeBtn").onclick = () => { scanMode = "CHECKOUT"; scanBuffer = { firstScan: null, secondScan: null, waitingFor: "first" }; };
-    document.getElementById("editModeToggle").onclick = () => { editMode = !editMode; document.getElementById("editModeToggle").innerText = `✏️ Edit Mode: ${editMode ? "ON" : "OFF"}`; };
-    document.getElementById("resetMapBtn").onclick = () => { shelves = []; loadFakeData(); drawCanvas(); renderMasterTable(); };
-    document.getElementById("generateBlanksBtn").onclick = () => {
-        let cnt = parseInt(document.getElementById("qrCount").value) || 3;
-        const container = document.getElementById("qrPrintContainer");
-        container.innerHTML = "";
-        for(let i=0; i<cnt; i++) {
-            const newId = `BLANK-${Date.now()}-${i}`;
-            inventory.push({ id: newId, type: "blank", name: "", qty: 0, location: "unassigned" });
-            const div = document.createElement("div"); div.className = "qr-item";
-            const qrcodeDiv = document.createElement("div"); qrcodeDiv.id = `qr-${newId}`;
-            div.appendChild(qrcodeDiv);
-            div.innerHTML += `<span>${newId}</span>`;
-            container.appendChild(div);
-            new QRCode(qrcodeDiv, { text: newId, width: 100, height: 100 });
-        }
-        saveData(); renderMasterTable();
+function importData() {
+  const inp = document.createElement("input");
+  inp.type = "file"; inp.accept = ".json";
+  inp.onchange = e => {
+    const r = new FileReader();
+    r.onload = ev => {
+      try {
+        const d = JSON.parse(ev.target.result);
+        if (d.inventory) inventory = d.inventory;
+        if (d.shelves)   shelves   = d.shelves;
+        if (d.activity)  activity  = d.activity;
+        if (d.categories) categories = d.categories;
+        save();
+        refreshAll();
+        notify("Import successful!", "success");
+      } catch(e) { notify("Import failed — invalid file", "error"); }
     };
-    document.getElementById("printQrBtn").onclick = () => window.print();
-    document.getElementById("addBlankItemBtn").onclick = () => {
-        const bid = `BLANK-${Date.now()}`;
-        inventory.push({ id: bid, type: "blank", name: "", qty: 0, location: "unassigned" });
-        saveData(); renderMasterTable();
-    };
-    document.getElementById("exportDataBtn").onclick = () => {
-        const dataStr = JSON.stringify({ inventory, shelves });
-        const blob = new Blob([dataStr], {type: "application/json"});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a"); a.href = url; a.download = "warehouse_backup.json"; a.click(); URL.revokeObjectURL(url);
-    };
-    document.getElementById("importDataBtn").onclick = () => {
-        const input = document.createElement("input"); input.type = "file"; input.accept = "application/json";
-        input.onchange = e => {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = ev => { const data = JSON.parse(ev.target.result); inventory = data.inventory; shelves = data.shelves; saveData(); renderMasterTable(); drawCanvas(); };
-            reader.readAsText(file);
-        };
-        input.click();
-    };
-    document.getElementById("resetDemoData").onclick = () => { loadFakeData(); renderMasterTable(); drawCanvas(); };
-    
-    // Init
-    loadFromStorage();
-    renderMasterTable();
+    r.readAsText(e.target.files[0]);
+  };
+  inp.click();
+}
+
+function clearAllData() {
+  if (!confirm("⚠️ This will delete ALL inventory data. Are you sure?")) return;
+  inventory = []; shelves = []; activity = [];
+  save(); refreshAll();
+  notify("All data cleared.", "warn");
+}
+
+// ============================================================
+//  NAVIGATION
+// ============================================================
+function showTab(tab) {
+  document.querySelectorAll('.main').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const page = document.getElementById(`page-${tab}`);
+  const btn  = document.querySelector(`.nav-btn[data-tab="${tab}"]`);
+  if (page) page.classList.add('active');
+  if (btn)  btn.classList.add('active');
+
+  if (tab === 'scanner') initScanner();
+  else stopScanner();
+  if (tab === 'map') { setTimeout(drawCanvas, 50); }
+  if (tab === 'master') { renderMasterTable(); updateReprintSelect(); }
+  if (tab === 'dashboard') { renderDashboard(); }
+  if (tab === 'settings') { renderSettings(); }
+  if (tab === 'qrprint') { updateReprintSelect(); }
+}
+
+// ============================================================
+//  REFRESH ALL
+// ============================================================
+function refreshAll() {
+  updateHeaderStats();
+  renderDashboard();
+  renderMasterTable();
+  drawCanvas();
+  renderSettings();
+  updateReprintSelect();
+  updateQuickSimBtns();
+}
+
+function updateHeaderStats() {
+  const items   = inventory.filter(i => i.type === "item").length;
+  const shlvs   = shelves.length;
+  const blanks  = inventory.filter(i => i.type === "blank").length;
+  document.getElementById("hstat-items").textContent   = items;
+  document.getElementById("hstat-shelves").textContent = shlvs;
+  document.getElementById("hstat-blanks").textContent  = blanks;
+  document.getElementById("nav-badge-master").textContent = items;
+}
+
+// ============================================================
+//  DASHBOARD
+// ============================================================
+function renderDashboard() {
+  updateHeaderStats();
+  const items  = inventory.filter(i => i.type === "item");
+  const totalQty = items.reduce((s,i) => s + (i.qty||0), 0);
+  document.getElementById("dash-items").textContent   = items.length;
+  document.getElementById("dash-qty").textContent     = totalQty;
+  document.getElementById("dash-shelves").textContent = shelves.length;
+  document.getElementById("dash-blanks").textContent  = inventory.filter(i=>i.type==="blank").length;
+
+  // Activity feed
+  const feed = document.getElementById("activity-feed");
+  if (activity.length === 0) {
+    feed.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">No activity yet</div></div>`;
+  } else {
+    const sorted = [...activity].sort((a,b) => b.time - a.time).slice(0,30);
+    feed.innerHTML = sorted.map(a => `
+      <div class="activity-item">
+        <div class="activity-dot ${a.type}"></div>
+        <div class="activity-body">
+          <div class="activity-msg">${a.msg}</div>
+          <div class="activity-time">${timeAgo(a.time)}</div>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  // Shelf utilization
+  const utilEl = document.getElementById("shelf-util-list");
+  if (shelves.length === 0) {
+    utilEl.innerHTML = `<div class="text-dim text-sm">No shelves on map yet.</div>`;
+    return;
+  }
+  const maxItems = Math.max(...shelves.map(sh => inventory.filter(i=>i.location===sh.id&&i.type==="item").length), 1);
+  utilEl.innerHTML = shelves.map(sh => {
+    const cnt = inventory.filter(i=>i.location===sh.id&&i.type==="item").length;
+    const pct = maxItems > 0 ? Math.round(cnt / maxItems * 100) : 0;
+    return `
+      <div class="mb-16">
+        <div class="flex justify-between text-sm mb-8">
+          <span class="font-semibold">${sh.label || sh.id}</span>
+          <span class="text-dim">${cnt} item${cnt!==1?'s':''}</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${Math.max(pct,2)}%"></div></div>
+      </div>
+    `;
+  }).join("");
+}
+
+function timeAgo(ts) {
+  const diff = Date.now() - ts;
+  if (diff < 60000) return "just now";
+  if (diff < 3600000) return Math.floor(diff/60000) + "m ago";
+  if (diff < 86400000) return Math.floor(diff/3600000) + "h ago";
+  return new Date(ts).toLocaleDateString();
+}
+
+// ============================================================
+//  SCANNER
+// ============================================================
+const scanInstructions = {
+  REGISTER: "1️⃣ Scan a <strong>blank QR code</strong> on a physical item<br>2️⃣ Enter item name and details<br>3️⃣ Optionally scan a shelf to assign immediately",
+  PUTAWAY:  "1️⃣ Scan the <strong>item QR</strong> (on the box)<br>2️⃣ Scan the <strong>shelf QR</strong> where it belongs<br>✅ Location updates automatically",
+  MOVE:     "1️⃣ Scan the <strong>item</strong> you want to move<br>2️⃣ Scan the <strong>destination shelf</strong><br>✅ Item relocates instantly",
+  CHECKOUT: "1️⃣ Scan the <strong>item</strong> you're using<br>2️⃣ Scan the <strong>station QR</strong> (e.g. workbench)<br>3️⃣ Enter quantity used",
+};
+
+function setMode(mode) {
+  scanMode = mode;
+  scanBuffer = { step: 1, item: null };
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById(`mode-${mode}`);
+  if (btn) btn.classList.add('active');
+  setScanStatus({ text: `Mode: ${mode} — ${modeReadable(mode)}`, color: "default" });
+  document.getElementById("scan-instructions").innerHTML = scanInstructions[mode] || "";
+  hideCurrentItem();
+}
+
+function modeReadable(m) {
+  return { REGISTER:"Scan blank QR first", PUTAWAY:"Scan item then shelf", MOVE:"Scan item then new shelf", CHECKOUT:"Scan item then station" }[m] || m;
+}
+
+function setScanStatus({ text, color }) {
+  const el = document.getElementById("scan-status");
+  el.querySelector('.status-text').innerHTML = text;
+}
+
+function addScanLog(msg) {
+  const log = document.getElementById("scan-log");
+  const now = new Date();
+  const time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0') + ':' + now.getSeconds().toString().padStart(2,'0');
+  const entry = document.createElement("div");
+  entry.className = "log-entry";
+  entry.innerHTML = `<span class="log-time">${time}</span><span class="log-msg">${msg}</span>`;
+  log.insertBefore(entry, log.firstChild);
+  if (log.children.length > 20) log.removeChild(log.lastChild);
+}
+
+function logActivity(type, msg) {
+  activity.push({ type, msg, time: Date.now() });
+  if (activity.length > 200) activity = activity.slice(-200);
+}
+
+function initScanner() {
+  if (scannerRunning) return;
+  const fps = parseInt(document.getElementById("pref-fps")?.value || prefs.fps || 10);
+  const cam = document.getElementById("pref-camera")?.value || prefs.camera || "environment";
+  try {
+    scanner = new Html5Qrcode("qr-reader");
+    scanner.start(
+      { facingMode: cam },
+      { fps, qrbox: { width: 250, height: 250 } },
+      onQRSuccess,
+      () => {}
+    ).then(() => { scannerRunning = true; });
+  } catch(e) {
+    document.getElementById("qr-reader").innerHTML = `<div style="padding:20px;text-align:center;color:var(--text2)">📵 Camera unavailable.<br><span style="font-size:12px;color:var(--text3)">Use the Simulate Scan button above to test without camera. Ensure you're on HTTPS or localhost.</span></div>`;
+  }
+}
+
+function stopScanner() {
+  if (scanner && scannerRunning) {
+    scanner.stop().then(() => { scannerRunning = false; }).catch(() => {});
+  }
+}
+
+function onQRSuccess(decoded) {
+  processQR(decoded.trim());
+}
+
+function showSimPanel() {
+  const p = document.getElementById("sim-panel");
+  p.style.display = p.style.display === "none" ? "block" : "none";
+}
+
+function simulateScan() {
+  const val = document.getElementById("sim-input").value.trim();
+  if (!val) { notify("Enter a QR ID to simulate", "warn"); return; }
+  processQR(val);
+  document.getElementById("sim-input").value = "";
+}
+
+function updateQuickSimBtns() {
+  const wrap = document.getElementById("quick-sim-btns");
+  const sugg = document.getElementById("sim-suggestions");
+  if (!wrap || !sugg) return;
+  const ids = inventory.slice(0,12).map(i => i.id);
+  wrap.innerHTML = ids.map(id => {
+    const item = inventory.find(i=>i.id===id);
+    const tag = item.type === "item" ? "tag-green" : item.type === "shelf" ? "tag-cyan" : item.type === "station" ? "tag-amber" : "tag-gray";
+    return `<button class="tag ${tag}" style="cursor:pointer;padding:4px 10px;font-size:11px" onclick="processQR('${id}')">${id}</button>`;
+  }).join("");
+  sugg.innerHTML = inventory.map(i => `<option value="${i.id}">`).join("");
+}
+
+// ============================================================
+//  CORE SCAN LOGIC
+// ============================================================
+function processQR(id) {
+  const found = inventory.find(i => i.id === id);
+
+  if (scanMode === "REGISTER") {
+    if (!found || found.type === "blank") {
+      // Ask for name
+      const name = prompt(`📝 REGISTER: Enter item name for QR "${id}":`, "");
+      if (!name || !name.trim()) return;
+      const cat  = prompt("Category (or leave blank):", categories[0] || "");
+      const qty  = parseInt(prompt("Initial quantity:", "1") || "1") || 1;
+      if (found) {
+        found.name = name.trim();
+        found.type = "item";
+        found.category = cat || "";
+        found.qty  = qty;
+        found.updated = ts();
+        setScanStatus({ text: `✅ Registered Blank → <strong>${name}</strong>` });
+        logActivity("register", `Blank ${id} registered as "${name}" (qty: ${qty})`);
+      } else {
+        inventory.push({ id, type:"item", name:name.trim(), category:cat||"", qty, location:"unassigned", updated:ts() });
+        setScanStatus({ text: `✅ New item registered: <strong>${name}</strong>` });
+        logActivity("register", `${id} registered as "${name}" (qty: ${qty})`);
+      }
+      addScanLog(`REGISTERED ${id} → ${name}`);
+      notify(`Registered: ${name}`, "success");
+      save(); refreshAll();
+    } else {
+      setScanStatus({ text: `⚠️ <strong>${id}</strong> already registered. Use Put Away or Move mode.` });
+      addScanLog(`SKIP: ${id} already registered`);
+      notify(`${id} already exists. Switch mode.`, "warn");
+    }
+    return;
+  }
+
+  if (scanMode === "PUTAWAY") {
+    if (scanBuffer.step === 1) {
+      if (!found) { setScanStatus({ text:`❌ Unknown QR: <strong>${id}</strong>. Register it first.` }); return; }
+      if (found.type !== "item" && found.type !== "blank") { setScanStatus({ text:`⚠️ <strong>${id}</strong> is a ${found.type} — scan an item QR first.` }); return; }
+      scanBuffer.item = found;
+      scanBuffer.step = 2;
+      setScanStatus({ text:`📦 Item: <strong>${found.name||id}</strong> — now scan a <strong>Shelf QR</strong>` });
+      addScanLog(`ITEM SCANNED: ${id}`);
+      showCurrentItem(found);
+    } else {
+      if (!found || found.type !== "shelf") { setScanStatus({ text:`❌ <strong>${id}</strong> is not a shelf. Scan a SHELF QR code.` }); return; }
+      scanBuffer.item.location = found.id;
+      scanBuffer.item.type = "item";
+      if (!scanBuffer.item.name) scanBuffer.item.name = "Unregistered Item";
+      scanBuffer.item.updated = ts();
+      setScanStatus({ text:`✅ <strong>${scanBuffer.item.name}</strong> → placed on <strong>${found.name||found.id}</strong>` });
+      addScanLog(`PUT AWAY: ${scanBuffer.item.id} → ${found.id}`);
+      logActivity("putaway", `${scanBuffer.item.name} placed on ${found.name||found.id}`);
+      notify(`Placed on ${found.name||found.id}!`, "success");
+      scanBuffer = { step:1, item:null };
+      hideCurrentItem();
+      save(); refreshAll();
+      syncToClickup(scanBuffer.item, found);
+    }
+    return;
+  }
+
+  if (scanMode === "MOVE") {
+    if (scanBuffer.step === 1) {
+      if (!found || found.type !== "item") { setScanStatus({ text:`❌ <strong>${id}</strong> is not a registered item.` }); return; }
+      scanBuffer.item = found;
+      scanBuffer.step = 2;
+      setScanStatus({ text:`🔄 Moving: <strong>${found.name}</strong> (currently at ${found.location}) — scan new <strong>Shelf QR</strong>` });
+      addScanLog(`ITEM TO MOVE: ${id}`);
+      showCurrentItem(found);
+    } else {
+      if (!found || found.type !== "shelf") { setScanStatus({ text:`❌ Destination must be a shelf QR.` }); return; }
+      const oldLoc = scanBuffer.item.location;
+      scanBuffer.item.location = found.id;
+      scanBuffer.item.updated  = ts();
+      setScanStatus({ text:`✅ <strong>${scanBuffer.item.name}</strong> moved to <strong>${found.name||found.id}</strong>` });
+      addScanLog(`MOVED: ${scanBuffer.item.id} → ${found.id}`);
+      logActivity("move", `${scanBuffer.item.name} moved from ${oldLoc} to ${found.name||found.id}`);
+      notify(`Moved to ${found.name||found.id}!`, "success");
+      scanBuffer = { step:1, item:null };
+      hideCurrentItem();
+      save(); refreshAll();
+    }
+    return;
+  }
+
+  if (scanMode === "CHECKOUT") {
+    if (scanBuffer.step === 1) {
+      if (!found || found.type !== "item") { setScanStatus({ text:`❌ <strong>${id}</strong> is not a registered item.` }); return; }
+      scanBuffer.item = found;
+      scanBuffer.step = 2;
+      setScanStatus({ text:`✋ Checking out: <strong>${found.name}</strong> (stock: ${found.qty}) — scan a <strong>Station QR</strong>` });
+      addScanLog(`CHECKOUT ITEM: ${id}`);
+      showCurrentItem(found);
+    } else {
+      if (!found || found.type !== "station") { setScanStatus({ text:`❌ Destination must be a station QR.` }); return; }
+      const used = parseInt(prompt(`How many "${scanBuffer.item.name}" to check out?`, "1") || "1") || 1;
+      scanBuffer.item.qty      = Math.max(0, (scanBuffer.item.qty||0) - used);
+      scanBuffer.item.location = found.id;
+      scanBuffer.item.updated  = ts();
+      setScanStatus({ text:`✅ Checked out <strong>${used}×</strong> <strong>${scanBuffer.item.name}</strong> to <strong>${found.name}</strong>. Stock: ${scanBuffer.item.qty}` });
+      addScanLog(`CHECKOUT: ${used}× ${scanBuffer.item.id} → ${found.id}`);
+      logActivity("checkout", `${used}× ${scanBuffer.item.name} checked out to ${found.name} (remaining: ${scanBuffer.item.qty})`);
+      notify(`${used}× ${scanBuffer.item.name} checked out!`, "success");
+      scanBuffer = { step:1, item:null };
+      hideCurrentItem();
+      save(); refreshAll();
+    }
+    return;
+  }
+}
+
+function showCurrentItem(item) {
+  const el = document.getElementById("current-item-info");
+  const det = document.getElementById("current-item-details");
+  el.style.display = "block";
+  det.innerHTML = `
+    <div class="flex gap-16 flex-wrap">
+      <div><div class="input-label">ID</div><div class="text-mono text-sm">${item.id}</div></div>
+      <div><div class="input-label">Name</div><div class="font-semibold">${item.name||"(unnamed)"}</div></div>
+      <div><div class="input-label">Qty</div><div class="text-accent font-bold text-mono">${item.qty}</div></div>
+      <div><div class="input-label">Location</div><div class="tag tag-cyan">${item.location||"unassigned"}</div></div>
+    </div>
+  `;
+}
+function hideCurrentItem() { document.getElementById("current-item-info").style.display = "none"; }
+
+// ============================================================
+//  MASTER TABLE
+// ============================================================
+function renderMasterTable() {
+  const tbody  = document.getElementById("master-tbody");
+  if (!tbody) return;
+  const search = (document.getElementById("master-search")?.value||"").toLowerCase();
+  const filter = document.getElementById("master-filter")?.value || "all";
+
+  let rows = inventory.filter(i => {
+    if (filter !== "all" && i.type !== filter) return false;
+    if (search && !(`${i.id} ${i.name} ${i.location} ${i.category}`).toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text3)">No items found</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(item => {
+    const typeTag = {
+      item:    `<span class="tag tag-green">ITEM</span>`,
+      blank:   `<span class="tag tag-gray">BLANK</span>`,
+      shelf:   `<span class="tag tag-cyan">SHELF</span>`,
+      station: `<span class="tag tag-amber">STATION</span>`,
+    }[item.type] || "";
+    const locDisplay = item.type==="shelf"||item.type==="station" ? `<span class="text-dim text-xs">${item.location}</span>` : item.location === "unassigned" ? `<span class="tag tag-gray">unassigned</span>` : `<span class="tag tag-cyan">${item.location}</span>`;
+    const qtyCell = item.type==="item" ? `
+      <div class="td-editable">
+        <input type="number" min="0" value="${item.qty}" onchange="updateQty('${item.id}',this.value)" style="width:65px">
+      </div>` : `<span class="text-dim">—</span>`;
+    const updStr = item.updated ? new Date(item.updated).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : "—";
+
+    return `<tr>
+      <td class="td-mono">${item.id}</td>
+      <td>${typeTag}</td>
+      <td class="td-editable"><input type="text" value="${item.name||''}" placeholder="${item.type==='blank'?'(unregistered)':'Name...'}" onchange="updateName('${item.id}',this.value)"></td>
+      <td class="td-editable"><input type="text" value="${item.category||''}" placeholder="Category" onchange="updateCat('${item.id}',this.value)" list="cat-list"></td>
+      <td>${qtyCell}</td>
+      <td>${locDisplay}</td>
+      <td class="text-xs text-dim">${updStr}</td>
+      <td>
+        <div class="flex gap-8">
+          <button class="btn btn-ghost btn-sm btn-icon" data-tip="Print QR" onclick="addToQueueById('${item.id}')">🖨</button>
+          <button class="btn btn-danger btn-sm btn-icon" data-tip="Delete" onclick="deleteItem('${item.id}')">🗑</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join("");
+
+  // Category datalist
+  let cl = document.getElementById("cat-list");
+  if (!cl) { cl = document.createElement("datalist"); cl.id = "cat-list"; document.body.appendChild(cl); }
+  cl.innerHTML = categories.map(c => `<option value="${c}">`).join("");
+}
+
+function updateName(id, val) {
+  const item = inventory.find(i=>i.id===id);
+  if (item) { item.name = val; item.updated = ts(); save(); updateHeaderStats(); }
+}
+function updateQty(id, val) {
+  const item = inventory.find(i=>i.id===id);
+  if (item) { item.qty = parseInt(val)||0; item.updated = ts(); save(); renderDashboard(); }
+}
+function updateCat(id, val) {
+  const item = inventory.find(i=>i.id===id);
+  if (item) { item.category = val; item.updated = ts(); save(); }
+}
+function deleteItem(id) {
+  if (!confirm(`Delete ${id}?`)) return;
+  inventory = inventory.filter(i=>i.id!==id);
+  shelves   = shelves.filter(s=>s.id!==id);
+  save(); refreshAll();
+  notify("Item deleted", "warn");
+}
+function openAddItemModal()  { document.getElementById("add-item-form").style.display = "block"; }
+function closeAddItemModal() { document.getElementById("add-item-form").style.display = "none"; }
+function addItemManually() {
+  const name = document.getElementById("new-item-name").value.trim();
+  const qty  = parseInt(document.getElementById("new-item-qty").value) || 1;
+  if (!name) { notify("Enter item name", "warn"); return; }
+  const id = "ITEM-" + Date.now();
+  inventory.push({ id, type:"item", name, category:"", qty, location:"unassigned", updated:ts() });
+  save(); renderMasterTable(); updateHeaderStats(); closeAddItemModal();
+  notify(`Added: ${name}`, "success");
+}
+
+// ============================================================
+//  QR PRINTER
+// ============================================================
+function generateBlanks() {
+  const count = parseInt(document.getElementById("blank-count").value) || 8;
+  for (let i = 0; i < count; i++) {
+    const id = `BLANK-${Date.now()}-${i}`;
+    inventory.push({ id, type:"blank", name:"", category:"", qty:0, location:"unassigned", updated:ts() });
+    printQueue.push({ id, label:"BLANK", sub:"Unregistered" });
+  }
+  save(); renderPrintQueue(); renderMasterTable(); updateHeaderStats();
+  notify(`${count} blank QR codes generated!`, "success");
+}
+
+function generateShelfQRs() {
+  const prefix = document.getElementById("shelf-prefix").value || "SHELF-";
+  const start  = parseInt(document.getElementById("shelf-start").value) || 1;
+  const end    = parseInt(document.getElementById("shelf-end").value) || 10;
+  for (let i = start; i <= end; i++) {
+    const num = i.toString().padStart(2, '0');
+    const id  = `${prefix}${num}`;
+    if (!inventory.find(x => x.id === id)) {
+      inventory.push({ id, type:"shelf", name:`${prefix}${num}`, category:"", qty:0, location:"fixed", updated:ts() });
+    }
+    if (!printQueue.find(p => p.id === id)) {
+      printQueue.push({ id, label:"SHELF", sub:`${prefix}${num}` });
+    }
+  }
+  save(); renderPrintQueue(); renderMasterTable();
+  notify(`Shelf QR codes generated (${prefix}${start.toString().padStart(2,'0')} – ${prefix}${end.toString().padStart(2,'0')})`, "success");
+}
+
+function reprintSelected() {
+  const sel = document.getElementById("reprint-select");
+  const id  = sel.value;
+  if (!id) return;
+  const item = inventory.find(i=>i.id===id);
+  if (!item) return;
+  if (!printQueue.find(p=>p.id===id)) printQueue.push({ id, label:item.type.toUpperCase(), sub:item.name||item.id });
+  renderPrintQueue();
+  notify(`Added to queue: ${id}`, "success");
+}
+
+function addToQueueById(id) {
+  const item = inventory.find(i=>i.id===id);
+  if (!item) return;
+  if (!printQueue.find(p=>p.id===id)) printQueue.push({ id, label:item.type.toUpperCase(), sub:item.name||item.id });
+  showTab('qrprint');
+  renderPrintQueue();
+  notify(`Added to print queue: ${id}`, "success");
+}
+
+function clearPrintQueue() {
+  printQueue = [];
+  renderPrintQueue();
+}
+
+function renderPrintQueue() {
+  const area = document.getElementById("qr-print-area");
+  document.getElementById("qr-count-badge").textContent = printQueue.length + " QR code" + (printQueue.length!==1?"s":"");
+  if (printQueue.length === 0) {
+    area.innerHTML = `<div class="empty-state" style="width:100%"><div class="empty-state-icon">🖨</div><div class="empty-state-title">No QR codes queued</div><div class="empty-state-sub">Generate blanks or select existing items above</div></div>`;
+    return;
+  }
+  area.innerHTML = "";
+  printQueue.forEach((pq, idx) => {
+    const card = document.createElement("div");
+    card.className = "qr-card";
+    card.id = `qr-card-${idx}`;
+    const qrDiv = document.createElement("div");
+    qrDiv.id = `qr-${idx}`;
+    const labelDiv = document.createElement("div");
+    labelDiv.className = "qr-card-type";
+    labelDiv.textContent = pq.label;
+    const subDiv = document.createElement("div");
+    subDiv.className = "qr-card-label";
+    subDiv.textContent = pq.id;
+    const nameDiv = document.createElement("div");
+    nameDiv.className = "qr-card-label";
+    nameDiv.style.fontStyle = "italic";
+    nameDiv.textContent = pq.sub || "";
+    const rmBtn = document.createElement("button");
+    rmBtn.textContent = "✕";
+    rmBtn.style.cssText = "background:none;border:none;cursor:pointer;color:#999;font-size:10px;padding:0;margin-top:4px";
+    rmBtn.onclick = () => { printQueue.splice(idx, 1); renderPrintQueue(); };
+    card.appendChild(qrDiv);
+    card.appendChild(labelDiv);
+    card.appendChild(subDiv);
+    card.appendChild(nameDiv);
+    card.appendChild(rmBtn);
+    area.appendChild(card);
+    try {
+      new QRCode(qrDiv, { text: pq.id, width:110, height:110, colorDark:"#000", colorLight:"#fff" });
+    } catch(e) {}
+  });
+}
+
+function updateReprintSelect() {
+  const sel = document.getElementById("reprint-select");
+  if (!sel) return;
+  const items = inventory.filter(i=>i.type==="item"||i.type==="shelf"||i.type==="station");
+  sel.innerHTML = `<option value="">Select an item...</option>` + items.map(i => `<option value="${i.id}">${i.id} — ${i.name||i.type}</option>`).join("");
+}
+
+// ============================================================
+//  MAP
+// ============================================================
+let canvas, ctx;
+const SHELF_COLORS = ["#3b82f6","#8b5cf6","#06b6d4","#10b981","#f59e0b","#ef4444","#ec4899","#14b8a6"];
+let colorIdx = 0;
+function nextColor() { return SHELF_COLORS[colorIdx++ % SHELF_COLORS.length]; }
+
+function initCanvas() {
+  canvas = document.getElementById("warehouseCanvas");
+  if (!canvas) return;
+  ctx = canvas.getContext("2d");
+  // Mouse events
+  canvas.addEventListener("mousedown", onCanvasMouseDown);
+  canvas.addEventListener("mousemove", onCanvasMouseMove);
+  canvas.addEventListener("mouseup",   onCanvasMouseUp);
+  canvas.addEventListener("click",     onCanvasClick);
+  // Touch events
+  canvas.addEventListener("touchstart", e => { e.preventDefault(); onCanvasMouseDown(touchToMouse(e)); }, { passive:false });
+  canvas.addEventListener("touchmove",  e => { e.preventDefault(); onCanvasMouseMove(touchToMouse(e)); }, { passive:false });
+  canvas.addEventListener("touchend",   e => { e.preventDefault(); onCanvasMouseUp(touchToMouse(e)); },   { passive:false });
+}
+
+function touchToMouse(e) {
+  const t = e.touches[0] || e.changedTouches[0];
+  return { clientX: t.clientX, clientY: t.clientY, preventDefault: ()=>{} };
+}
+
+function getCanvasPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width  / rect.width;
+  const scaleY = canvas.height / rect.height;
+  return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+}
+
+function shelfAt(pos) {
+  return shelves.find(sh => pos.x >= sh.x && pos.x <= sh.x+sh.w && pos.y >= sh.y && pos.y <= sh.y+sh.h);
+}
+
+function onCanvasMouseDown(e) {
+  if (!editMode) return;
+  const pos = getCanvasPos(e);
+  const shelf = shelfAt(pos);
+  if (shelf) {
+    draggingShelf = shelf;
+    dragOffset = { x: pos.x - shelf.x, y: pos.y - shelf.y };
+  } else {
+    isDrawing = true;
+    drawStart = pos;
+    drawCurrent = pos;
+  }
+}
+
+function onCanvasMouseMove(e) {
+  if (!editMode) return;
+  const pos = getCanvasPos(e);
+  if (draggingShelf) {
+    draggingShelf.x = Math.max(0, pos.x - dragOffset.x);
+    draggingShelf.y = Math.max(0, pos.y - dragOffset.y);
+    drawCanvas(); return;
+  }
+  if (isDrawing) {
+    drawCurrent = pos;
     drawCanvas();
-    activateCanvasDrawing();
-    startScanner();
+    // Draw preview
+    ctx.fillStyle = "rgba(74,222,128,0.15)";
+    ctx.strokeStyle = "rgba(74,222,128,0.7)";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6,3]);
+    const x = Math.min(drawStart.x, drawCurrent.x);
+    const y = Math.min(drawStart.y, drawCurrent.y);
+    const w = Math.abs(drawCurrent.x - drawStart.x);
+    const h = Math.abs(drawCurrent.y - drawStart.y);
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeRect(x, y, w, h);
+    ctx.setLineDash([]);
+  }
+}
+
+function onCanvasMouseUp(e) {
+  const pos = getCanvasPos(e);
+  if (draggingShelf) {
+    save();
+    draggingShelf = null;
+    drawCanvas(); return;
+  }
+  if (isDrawing && drawStart) {
+    isDrawing = false;
+    const w = Math.abs(drawCurrent.x - drawStart.x);
+    const h = Math.abs(drawCurrent.y - drawStart.y);
+    if (w > 30 && h > 20) {
+      const label = prompt("Shelf name/label:", `SH-${shelves.length+1}`);
+      if (label) {
+        const id    = `SHELF-${Date.now()}`;
+        const color = nextColor();
+        shelves.push({
+          id, label,
+          x: Math.min(drawStart.x, drawCurrent.x),
+          y: Math.min(drawStart.y, drawCurrent.y),
+          w, h, color
+        });
+        inventory.push({ id, type:"shelf", name:label, category:"", qty:0, location:"fixed", updated:ts() });
+        save(); refreshAll();
+        notify(`Shelf "${label}" added!`, "success");
+      }
+    }
+    drawStart = null; drawCurrent = null;
+    drawCanvas();
+  }
+}
+
+function onCanvasClick(e) {
+  if (editMode) return;
+  const pos = getCanvasPos(e);
+  const shelf = shelfAt(pos);
+  if (shelf) {
+    selectedShelfId = shelf.id;
+    showShelfDetail(shelf);
+    drawCanvas();
+  } else {
+    selectedShelfId = null;
+    document.getElementById("map-shelf-detail").style.display = "none";
+    drawCanvas();
+  }
+}
+
+function showShelfDetail(shelf) {
+  const items = inventory.filter(i => i.location === shelf.id && i.type === "item");
+  const detail = document.getElementById("map-shelf-detail");
+  const title  = document.getElementById("map-detail-title");
+  const content = document.getElementById("map-detail-content");
+  detail.style.display = "block";
+  title.textContent = `${shelf.label || shelf.id} — ${items.length} item${items.length!==1?"s":""}`;
+  if (items.length === 0) {
+    content.innerHTML = `<div class="text-dim text-sm">No items on this shelf yet.</div>
+      <button class="btn btn-primary btn-sm mt-16" onclick="openAddToShelfModal('${shelf.id}')">+ Add Item Here</button>`;
+  } else {
+    content.innerHTML = `
+      <div class="table-wrap mb-16" style="border-radius:12px">
+        <table>
+          <thead><tr><th>ID</th><th>Name</th><th>Category</th><th>Qty</th></tr></thead>
+          <tbody>${items.map(i => `<tr>
+            <td class="td-mono text-xs">${i.id}</td>
+            <td class="font-semibold">${i.name}</td>
+            <td class="text-dim text-sm">${i.category||"—"}</td>
+            <td class="text-accent text-mono font-bold">${i.qty}</td>
+          </tr>`).join("")}</tbody>
+        </table>
+      </div>
+      <div class="flex gap-8">
+        <button class="btn btn-primary btn-sm" onclick="openAddToShelfModal('${shelf.id}')">+ Add Item</button>
+        ${editMode ? `<button class="btn btn-danger btn-sm" onclick="deleteShelf('${shelf.id}')">Delete Shelf</button>` : ""}
+      </div>
+    `;
+  }
+}
+
+function deleteShelf(id) {
+  if (!confirm("Delete this shelf and unassign all items?")) return;
+  shelves = shelves.filter(s=>s.id!==id);
+  inventory.filter(i=>i.location===id).forEach(i=>{ i.location="unassigned"; });
+  inventory = inventory.filter(i=>i.id!==id);
+  save(); refreshAll();
+  document.getElementById("map-shelf-detail").style.display = "none";
+  notify("Shelf deleted", "warn");
+}
+
+function drawCanvas() {
+  if (!canvas) { canvas = document.getElementById("warehouseCanvas"); if(!canvas) return; ctx = canvas.getContext("2d"); }
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Background
+  ctx.fillStyle = "#0e1014";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Grid
+  ctx.strokeStyle = "rgba(255,255,255,0.03)";
+  ctx.lineWidth = 1;
+  for (let x = 0; x < canvas.width; x += 40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke(); }
+  for (let y = 0; y < canvas.height; y += 40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke(); }
+
+  shelves.forEach(sh => {
+    const isSelected = sh.id === selectedShelfId;
+    const items = inventory.filter(i=>i.location===sh.id&&i.type==="item");
+    const color = sh.color || "#3b82f6";
+
+    // Shadow
+    ctx.shadowColor = color;
+    ctx.shadowBlur  = isSelected ? 20 : 8;
+
+    // Fill
+    ctx.fillStyle = hexToRgba(color, 0.18);
+    roundRect(ctx, sh.x, sh.y, sh.w, sh.h, 12);
+    ctx.fill();
+
+    // Border
+    ctx.strokeStyle = isSelected ? color : hexToRgba(color, 0.6);
+    ctx.lineWidth   = isSelected ? 2.5 : 1.5;
+    ctx.shadowBlur  = 0;
+    roundRect(ctx, sh.x, sh.y, sh.w, sh.h, 12);
+    ctx.stroke();
+
+    ctx.shadowBlur = 0;
+
+    // Label
+    ctx.fillStyle = "rgba(255,255,255,0.95)";
+    ctx.font      = "bold 13px 'Space Mono', monospace";
+    ctx.textBaseline = "top";
+    ctx.fillText(sh.label || sh.id, sh.x+10, sh.y+10);
+
+    // Item count pill
+    const countStr = `${items.length} item${items.length!==1?"s":""}`;
+    ctx.fillStyle   = hexToRgba(color, 0.3);
+    const pillW = ctx.measureText(countStr).width + 14;
+    ctx.beginPath();
+    ctx.roundRect(sh.x+8, sh.y+30, pillW, 18, 9);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.7)";
+    ctx.font = "10px 'DM Sans', sans-serif";
+    ctx.fillText(countStr, sh.x+15, sh.y+34);
+
+    // Item names (up to 2)
+    if (items.length > 0 && sh.h > 60) {
+      ctx.fillStyle = "rgba(255,255,255,0.45)";
+      ctx.font = "9px sans-serif";
+      items.slice(0,2).forEach((itm,idx) => {
+        const txt = itm.name.length > 20 ? itm.name.slice(0,18)+"…" : itm.name;
+        ctx.fillText("· "+txt, sh.x+10, sh.y+52+idx*13);
+      });
+    }
+  });
+
+  // Edit mode overlay hint
+  if (editMode && shelves.length === 0) {
+    ctx.fillStyle = "rgba(74,222,128,0.2)";
+    ctx.strokeStyle = "rgba(74,222,128,0.4)";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8,4]);
+    roundRect(ctx, 40, 40, 200, 100, 12);
+    ctx.fill();
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "rgba(74,222,128,0.8)";
+    ctx.font = "bold 13px 'Space Mono', monospace";
+    ctx.textBaseline = "middle";
+    ctx.fillText("Click + drag to draw a shelf", 60, 92);
+  }
+}
+
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y);
+  ctx.arcTo(x+w, y, x+w, y+r, r);
+  ctx.lineTo(x+w, y+h-r);
+  ctx.arcTo(x+w, y+h, x+w-r, y+h, r);
+  ctx.lineTo(x+r, y+h);
+  ctx.arcTo(x, y+h, x, y+h-r, r);
+  ctx.lineTo(x, y+r);
+  ctx.arcTo(x, y, x+r, y, r);
+  ctx.closePath();
+}
+
+function toggleEditMode() {
+  editMode = !editMode;
+  const btn = document.getElementById("edit-mode-btn");
+  btn.textContent = `✏ Edit Mode: ${editMode?"ON":"OFF"}`;
+  btn.className   = editMode ? "btn btn-primary btn-sm" : "btn btn-secondary btn-sm";
+  document.getElementById("map-sub").textContent = editMode ? "Edit mode — drag to draw shelves, drag to reposition" : "View mode — click a shelf to see inventory";
+  document.getElementById("edit-mode-hint").style.display = editMode ? "block" : "none";
+  canvas.style.cursor = editMode ? "crosshair" : "pointer";
+  drawCanvas();
+}
+
+function resetMap() {
+  if (!confirm("Reset map layout? Shelf items remain in inventory.")) return;
+  shelves = [];
+  save(); drawCanvas();
+  document.getElementById("map-shelf-detail").style.display = "none";
+  renderDashboard();
+}
+
+// ADD TO SHELF FROM MAP
+let addToShelfTargetId = null;
+function openAddToShelfModal(shelfId) {
+  addToShelfTargetId = shelfId;
+  const shelf = inventory.find(i=>i.id===shelfId);
+  document.getElementById("atsh-name").textContent = shelf?.name || shelfId;
+  const sel = document.getElementById("atsh-item-select");
+  const unassigned = inventory.filter(i=>i.type==="item"&&(i.location==="unassigned"||!i.location));
+  sel.innerHTML = `<option value="_new">+ Create new item</option>` + unassigned.map(i=>`<option value="${i.id}">${i.id} — ${i.name}</option>`).join("");
+  sel.onchange = () => {
+    document.getElementById("atsh-new-fields").style.display = sel.value === "_new" ? "block" : "none";
+  };
+  document.getElementById("add-to-shelf-modal").classList.add("open");
+}
+function confirmAddToShelf() {
+  const sel  = document.getElementById("atsh-item-select");
+  const qty  = parseInt(document.getElementById("atsh-qty").value)||1;
+  let item;
+  if (sel.value === "_new") {
+    const name = document.getElementById("atsh-new-name").value.trim();
+    if (!name) { notify("Enter item name", "warn"); return; }
+    const id = "ITEM-" + Date.now();
+    item = { id, type:"item", name, category:"", qty, location:addToShelfTargetId, updated:ts() };
+    inventory.push(item);
+    logActivity("register", `${name} created and placed on ${addToShelfTargetId}`);
+  } else {
+    item = inventory.find(i=>i.id===sel.value);
+    if (!item) { notify("Item not found", "error"); return; }
+    item.location = addToShelfTargetId;
+    item.qty = qty;
+    item.updated = ts();
+    logActivity("putaway", `${item.name} placed on ${addToShelfTargetId}`);
+  }
+  save(); refreshAll();
+  document.getElementById("add-to-shelf-modal").classList.remove("open");
+  // Refresh shelf detail
+  const shelf = shelves.find(s=>s.id===addToShelfTargetId);
+  if (shelf) showShelfDetail(shelf);
+  notify(`Item added to shelf!`, "success");
+}
+function closeShelfModal() { document.getElementById("shelf-modal").classList.remove("open"); }
+
+// ============================================================
+//  SETTINGS
+// ============================================================
+function renderSettings() {
+  // ClickUp toggle UI
+  const tog = document.getElementById("clickup-toggle");
+  const cfg = document.getElementById("clickup-config");
+  if (clickupCfg.enabled) { tog.classList.add("on"); cfg.style.display="block"; }
+  else { tog.classList.remove("on"); cfg.style.display="none"; }
+  if (document.getElementById("cu-token")) document.getElementById("cu-token").value = clickupCfg.token||"";
+  if (document.getElementById("cu-list-id")) document.getElementById("cu-list-id").value = clickupCfg.listId||"";
+  if (document.getElementById("cu-field-id")) document.getElementById("cu-field-id").value = clickupCfg.fieldId||"";
+
+  // Categories
+  renderCategories();
+
+  // Prefs
+  if (document.getElementById("pref-camera")) document.getElementById("pref-camera").value = prefs.camera||"environment";
+  if (document.getElementById("pref-fps")) document.getElementById("pref-fps").value = prefs.fps||10;
+
+  // Storage size
+  try {
+    const size = new TextEncoder().encode(localStorage.getItem("wh_data")||"").length;
+    document.getElementById("storage-size").textContent = (size/1024).toFixed(1) + " KB";
+  } catch(e){}
+  document.getElementById("info-items").textContent = inventory.filter(i=>i.type==="item").length;
+  document.getElementById("info-logs").textContent  = activity.length;
+}
+
+function toggleClickup() {
+  clickupCfg.enabled = !clickupCfg.enabled;
+  renderSettings(); save();
+}
+function saveCUSettings() {
+  clickupCfg.token   = document.getElementById("cu-token").value;
+  clickupCfg.listId  = document.getElementById("cu-list-id").value;
+  clickupCfg.fieldId = document.getElementById("cu-field-id").value;
+  save();
+}
+async function testClickup() {
+  const status = document.getElementById("cu-status");
+  if (!clickupCfg.token) { status.innerHTML = `<span class="text-danger">❌ No API token entered</span>`; return; }
+  status.innerHTML = `<span class="text-dim">Testing...</span>`;
+  try {
+    const resp = await fetch("https://api.clickup.com/api/v2/user", { headers: { Authorization: clickupCfg.token }});
+    if (resp.ok) {
+      const data = await resp.json();
+      status.innerHTML = `<span class="text-accent">✅ Connected as ${data.user?.username||"user"}</span>`;
+    } else {
+      status.innerHTML = `<span class="text-danger">❌ Auth failed — check token</span>`;
+    }
+  } catch(e) {
+    status.innerHTML = `<span class="text-danger">❌ Network error — CORS may block browser requests. Use a proxy for production.</span>`;
+  }
+}
+
+async function syncToClickup(item, shelf) {
+  if (!clickupCfg.enabled || !clickupCfg.token || !clickupCfg.fieldId) return;
+  try {
+    await fetch(`https://api.clickup.com/api/v2/task/${item.id}/field/${clickupCfg.fieldId}`, {
+      method:"POST",
+      headers:{ Authorization:clickupCfg.token, "Content-Type":"application/json" },
+      body: JSON.stringify({ value: shelf.name||shelf.id })
+    });
+  } catch(e) {}
+}
+
+function renderCategories() {
+  const el = document.getElementById("categories-list");
+  if (!el) return;
+  el.innerHTML = categories.map((c,i) => `
+    <div class="flex justify-between items-center mb-8">
+      <span class="tag tag-gray">${c}</span>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="removeCategory(${i})">✕</button>
+    </div>
+  `).join("");
+}
+function addCategory() {
+  const inp = document.getElementById("new-category-input");
+  const val = inp.value.trim();
+  if (!val || categories.includes(val)) { notify("Duplicate or empty category","warn"); return; }
+  categories.push(val); inp.value = ""; save(); renderCategories();
+  notify(`Category "${val}" added`, "success");
+}
+function removeCategory(idx) { categories.splice(idx,1); save(); renderCategories(); }
+function savePrefs() {
+  prefs.camera = document.getElementById("pref-camera")?.value || prefs.camera;
+  prefs.fps    = parseInt(document.getElementById("pref-fps")?.value)  || prefs.fps;
+  save();
+}
+
+// ============================================================
+//  NOTIFICATIONS
+// ============================================================
+function notify(msg, type="success") {
+  const wrap = document.getElementById("notif-wrap");
+  const n = document.createElement("div");
+  n.className = `notif${type==="error"?" error":type==="warn"?" warn":""}`;
+  const icon = { success:"✅", error:"❌", warn:"⚠️" }[type]||"✅";
+  n.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
+  wrap.appendChild(n);
+  setTimeout(() => {
+    n.style.animation = "notif-out 0.3s ease forwards";
+    setTimeout(()=>n.remove(), 300);
+  }, 3000);
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+window.addEventListener("DOMContentLoaded", () => {
+  load();
+  initCanvas();
+  setMode("REGISTER");
+  refreshAll();
+  showTab("dashboard");
+
+  // Auto-start scanner if on scanner tab
+  document.querySelector('.nav-btn[data-tab="scanner"]').addEventListener("click", () => {
+    setTimeout(initScanner, 200);
+  });
+});
 </script>
 </body>
 </html>
